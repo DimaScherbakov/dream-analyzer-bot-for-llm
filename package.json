@@ -4,20 +4,29 @@
   "description": "Telegram bot for dream analysis using AI",
   "main": "src/index.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js"
+    "build": "tsc -p tsconfig.json",
+    "build:watch": "tsc -w -p tsconfig.json",
+    "start": "nodemon dist/index.js",
+    "dev": "concurrently \"npm run build:watch\" \"npm run start\""
   },
   "dependencies": {
-    "telegraf": "^4.15.6",
-    "express": "^4.18.2",
     "axios": "^1.6.2",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
     "redis": "^4.6.12",
-    "dotenv": "^16.3.1"
+    "telegraf": "^4.15.6"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "nodemon": "^3.0.2"
   },
-  "keywords": ["telegram", "bot", "dream", "analysis", "ai"],
+  "keywords": [
+    "telegram",
+    "bot",
+    "dream",
+    "analysis",
+    "ai"
+  ],
   "author": "",
   "license": "MIT"
 }
