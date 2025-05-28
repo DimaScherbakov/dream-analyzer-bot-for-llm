@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
-    "start": "nodemon dist/index.js",
+    "start": "npm run build && nodemon dist/index.js",
     "dev": "concurrently \"npm run build:watch\" \"npm run start\""
   },
   "dependencies": {
