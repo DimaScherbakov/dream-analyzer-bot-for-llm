@@ -15,6 +15,10 @@ export default class BotHandlers {
     this.geminiAPI = geminiAPI;
   }
 
+  private escapeMarkdown(text: string): string {
+    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
+  }
+
   // Обработчик команды /start
   async handleStart(ctx: Context): Promise<void> {
     try {
@@ -25,7 +29,7 @@ export default class BotHandlers {
       }
       
       // Сбрасываем сессию пользователя
-      await this.sessionManager.resetSession(userId);
+      // await this.sessionManager.resetSession(userId);
       
       const welcomeMessage = `🌙 **Добро пожаловать в бот-анализатор снов!**
 
@@ -217,10 +221,10 @@ export default class BotHandlers {
       const {countAIRequests = 0} = session;
       const hasAIPermission = countAIRequests < 1;
       // Вызываем API для анализа
-      const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.';
+      const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан .';
 
       // Отправляем результат пользователю
-      await ctx.reply(`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
+      await ctx.reply(`✨ **Анализ сна завершен:**\n\n${this.escapeMarkdown(analysisResult)}`, {
         parse_mode: 'Markdown'
       });
 
