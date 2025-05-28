@@ -214,8 +214,10 @@ export default class BotHandlers {
         answers: session.answers
       };
 
+      const {countAIRequests = 0} = session;
+      const hasAIPermission = countAIRequests < 1;
       // Вызываем API для анализа
-      const analysisResult = await this.geminiAPI.callGeminiAPI(promptData);
+      const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.';
 
       // Отправляем результат пользователю
       await ctx.reply(`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
@@ -231,7 +233,8 @@ export default class BotHandlers {
 
       // Обновляем состояние
       await this.sessionManager.updateSessionState(userId, {
-        state: USER_STATES.COMPLETED
+        state: USER_STATES.COMPLETED,
+        countAIRequests: hasAIPermission ? countAIRequests + 1 : countAIRequests
       });
 
     } catch (error) {

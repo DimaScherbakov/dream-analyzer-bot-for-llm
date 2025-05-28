@@ -7,4 +7,5 @@ export interface Session {
     currentQuestion: number;
     answers: string[];
     createdAt: string;
+    countAIRequests: number;
 }

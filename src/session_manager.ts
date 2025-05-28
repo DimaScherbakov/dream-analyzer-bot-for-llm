@@ -56,7 +56,7 @@ export default class SessionManager {
       if (this.redisClient) {
         await this.redisClient.setEx(
           `session:${userId}`, 
-          3600, // TTL 1 час
+          3600 * 24, // TTL 24 часа
           JSON.stringify(sessionData)
         );
       } else {
@@ -91,7 +91,8 @@ export default class SessionManager {
       dreamText: undefined,
       currentQuestion: 0,
       answers: [],
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      countAIRequests: 0
     };
   }
 
