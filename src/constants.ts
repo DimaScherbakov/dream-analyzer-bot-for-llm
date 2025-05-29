@@ -1,4 +1,7 @@
 // Константы для сонников и их описания
+import path from "node:path";
+import os from "node:os";
+
 export const DREAM_INTERPRETERS: Record<string, any> = {
     miller: {
         name: 'Сонник Миллера',
@@ -59,3 +62,24 @@ export const USER_STATES = {
     PROCESSING: 'processing',
     COMPLETED: 'completed'
 };
+
+const userDataPath = () => {
+    const appName = 'dream-analyzer-bot'; // Замените на имя вашего приложения
+    path.join(os.homedir(), 'AppData', 'Roaming', appName);
+// or for cross-platform support:
+    const getUserDataPath = () => {
+        switch (process.platform) {
+            case 'win32':
+                return path.join(os.homedir(), 'AppData', 'Roaming', appName);
+            case 'darwin':
+                return path.join(os.homedir(), 'Library', 'Application Support', appName);
+            case 'linux':
+                return path.join(os.homedir(), '.config', appName);
+            default:
+                throw new Error('Unsupported platform!');
+        }
+    };
+    return getUserDataPath();
+}
+
+export const LOG_FOLDER = userDataPath() +'/logs'; // Папка для логов
