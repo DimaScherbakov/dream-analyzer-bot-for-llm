@@ -6,6 +6,7 @@ import {Context} from "./types/context.interface";
 import {Session} from "./types/session.interface";
 import {Interpreter, PromptData} from "./types/prompt-data.interface";
 import {TextFormatter} from "./TextFormatter";
+import {readFile} from "node:fs/promises";
 
 export default class BotHandlers {
   private sessionManager: SessionManager;
@@ -202,7 +203,7 @@ export default class BotHandlers {
       await this.sessionManager.updateSessionState(userId, {
         state: USER_STATES.PROCESSING
       });
-
+      await this.promoteTGChannel(ctx);
       await ctx.reply('🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
         parse_mode: 'Markdown'
       });
@@ -221,7 +222,7 @@ export default class BotHandlers {
       const {countAIRequests = 0} = session;
       const hasAIPermission = countAIRequests < 1;
       // Вызываем API для анализа
-      const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан .';
+      const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан';
 
       // Отправляем результат пользователю
       await ctx.reply(`✨ **Анализ сна завершен:**\n\n${this.escapeMarkdown(analysisResult)}`, {
@@ -294,5 +295,10 @@ export default class BotHandlers {
   // Обработчик неизвестных команд
   async handleUnknownCommand(ctx: Context): Promise<void> {
     await ctx.reply('Неизвестная команда. Используйте /start для начала работы или /help для справки.');
+  }
+
+  async promoteTGChannel(ctx: Context): Promise<void> {
+      const tgChannel = JSON.parse((await readFile('./assets/app-config.json')).toString()).TG_CHANNEL_TO_PROMOTE;
+      await ctx.reply(`Подписывайтесь на наш Telegram-канал ${tgChannel}`);
   }
 }
