@@ -5,6 +5,7 @@ import GeminiAPI from "./gemini_api";
 import {Context} from "./types/context.interface";
 import {Session} from "./types/session.interface";
 import {Interpreter, PromptData} from "./types/prompt-data.interface";
+import {TextFormatter} from "./TextFormatter";
 
 export default class BotHandlers {
   private sessionManager: SessionManager;
@@ -101,10 +102,9 @@ export default class BotHandlers {
       if (!userId) {
         throw new Error('User ID is undefined');
       }
+      const messageText = TextFormatter.removeEmojis((ctx.message as any)?.text || '');
 
-      const messageText = (ctx.message as any)?.text;
-      
-      if (!messageText) {
+        if (!messageText) {
         await ctx.reply('Пожалуйста, отправьте текстовое сообщение.');
         return;
       }
