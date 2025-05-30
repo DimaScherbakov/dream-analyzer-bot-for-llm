@@ -23,7 +23,7 @@ export default class Server {
   private setupExpress(): void {
     // Middleware для парсинга JSON
     this.app.use(express.json());
-    
+
     // Middleware для логирования запросов
     this.app.use((req: Request, res: Response, next: NextFunction) => {
       console.log(`[Express log] ${new Date().toISOString()} - req.method: ${req.method} req.path: ${req.path}`);
@@ -34,6 +34,13 @@ export default class Server {
     this.app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
       console.error('Express error:', err);
       res.status(500).json({ error: 'Internal server error' });
+    });
+
+    // Маршрут для вебхука
+    this.app.use(`/webhook/${process.env.BOT_TOKEN}`, (req: Request, res: Response) => {
+        // Передаем запрос боту
+        this.bot?.getBot().handleUpdate(req.body);
+        res.sendStatus(200);
     });
   }
 
@@ -104,7 +111,7 @@ export default class Server {
         console.log('Starting in webhook mode...');
         
         // Настраиваем webhook
-        const webhookPath = this.bot.setupWebhook(this.app);
+        const webhookPath = await this.bot.setupWebhook();
         console.log(`Webhook configured at: ${webhookPath}`);
         
         // Запускаем сервер
