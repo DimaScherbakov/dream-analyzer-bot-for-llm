@@ -1,9 +1,10 @@
-import { Telegraf, Context as TelegrafContext } from 'telegraf';
-import { Express } from 'express';
+import {Context as TelegrafContext, Telegraf} from 'telegraf';
+import {Express} from 'express';
 import SessionManager from './session_manager';
 import GeminiAPI from './gemini_api';
 import BotHandlers from "./bot_handlers";
-import {Context} from "./types/context.interface";
+import logProcessTimeMiddleware from "./middlewares/log-process-time.middleware";
+import checkChatTypeMiddleware from "./middlewares/check-chat-type.middleware";
 
 export default class DreamAnalyzerBot {
   private bot!: Telegraf<TelegrafContext>;
@@ -48,38 +49,10 @@ export default class DreamAnalyzerBot {
   // Настройка middleware
   setupMiddleware() {
     // Логирование входящих сообщений
-    this.bot.use(async (ctx: TelegrafContext, next: () => Promise<void>) => {
-      const start = Date.now();
-      const userId = ctx.from?.id;
-      const messageType = ctx.updateType;
-      
-      console.log(`[Bot log ${new Date().toISOString()}] User ${userId} - ${messageType}`);
-      
-      try {
-        await next();
-      } catch (error) {
-        console.error(`Error processing update for user ${userId}:`, error);
-        
-        // Отправляем пользователю сообщение об ошибке
-        try {
-          await ctx.reply('Произошла внутренняя ошибка. Попробуйте позже или начните заново с /start');
-        } catch (replyError) {
-          console.error('Error sending error message:', replyError);
-        }
-      }
-      
-      const ms = Date.now() - start;
-      console.log(`Processed in ${ms}ms`);
-    });
+    this.bot.use(logProcessTimeMiddleware);
 
     // Middleware для проверки типа чата (только приватные сообщения)
-    this.bot.use(async (ctx: TelegrafContext, next: () => Promise<void>) => {
-      if (ctx.chat && ctx.chat.type !== 'private') {
-        await ctx.reply('Этот бот работает только в приватных сообщениях.');
-        return;
-      }
-      await next();
-    });
+    this.bot.use(checkChatTypeMiddleware);
   }
 
   // Настройка обработчиков команд и событий
