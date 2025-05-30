@@ -115,21 +115,29 @@ export default class DreamAnalyzerBot {
   }
 
   // Настройка webhook
-  setupWebhook(app: Express) {
-    const webhookPath = '/webhook';
-    const webhookUrl = process.env.WEBHOOK_URL + webhookPath;
-    
-    // Устанавливаем webhook
-    this.bot.telegram.setWebhook(webhookUrl).then(() => {
-      console.log(`Webhook set to: ${webhookUrl}`);
-    }).catch((error) => {
-      console.error('Error setting webhook:', error);
-    });
+  async setupWebhook() {
+    try {
+      if (!process.env.WEBHOOK_URL) {
+        throw new Error('WEBHOOK_URL не найден в переменных окружения');
+      }
 
-    // Настраиваем маршрут для webhook
-    app.use(this.bot.webhookCallback(webhookPath));
-    
-    return webhookPath;
+      const port = 443; // port defined by ngrok (look at devtools)
+      const webhookPath = `/webhook/${process.env.BOT_TOKEN}`;
+      
+      await this.bot.launch({
+        webhook: {
+          domain: process.env.WEBHOOK_URL,
+          port: port,
+          path: webhookPath
+        },
+      });
+      
+      console.log(`Webhook успешно запущен на порту ${port}`);
+      return webhookPath;
+    } catch (error) {
+      console.error('Ошибка при настройке webhook:', error);
+      throw error;
+    }
   }
 
   // Остановка бота
