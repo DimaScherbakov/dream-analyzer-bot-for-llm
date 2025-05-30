@@ -7,6 +7,8 @@ import {Session} from "./types/session.interface";
 import {Interpreter, PromptData} from "./types/prompt-data.interface";
 import {TextFormatter} from "./TextFormatter";
 import {readFile} from "node:fs/promises";
+import sceneManager from "./services/scene-manager";
+import {Logger} from "./logger";
 
 export default class BotHandlers {
   private sessionManager: SessionManager;
@@ -24,14 +26,13 @@ export default class BotHandlers {
   // Обработчик команды /start
   async handleStart(ctx: Context): Promise<void> {
     try {
-      const userId = ctx.from?.id;
+        sceneManager.handleInput(ctx);
+        await sceneManager.deleteAll(ctx);
+        const userId = ctx.from?.id;
       
       if (!userId) {
         throw new Error('User ID is undefined');
       }
-      
-      // Сбрасываем сессию пользователя
-      // await this.sessionManager.resetSession(userId);
       
       const welcomeMessage = `🌙 **Добро пожаловать в бот-анализатор снов!**
 
@@ -61,12 +62,12 @@ export default class BotHandlers {
   // Обработчик выбора сонника
   async handleInterpreterChoice(ctx: Context): Promise<void> {
     try {
-      const userId = ctx.from?.id;
+        await sceneManager.deleteAll(ctx);
+        const userId = ctx.from?.id;
       
       if (!userId) {
         throw new Error('User ID is undefined');
       }
-
 
       const interpreterKey = ctx.match?.[1]; // получаем ключ из callback_data
       
@@ -87,17 +88,20 @@ export default class BotHandlers {
       await ctx.editMessageText(interpreter.description, {
         parse_mode: 'Markdown'
       });
+        sceneManager.store(ctx, ctx.callbackQuery?.message?.message_id || 0);
 
     } catch (error) {
       console.error('Error in handleInterpreterChoice:', error);
       await ctx.answerCbQuery('Произошла ошибка');
-      await ctx.reply('Произошла ошибка при выборе сонника. Попробуйте начать заново /start');
+      await sceneManager.replyAndStore(ctx,'Произошла ошибка при выборе сонника. Попробуйте начать заново /start');
     }
   }
 
   // Обработчик текстовых сообщений
   async handleTextMessage(ctx: Context): Promise<void> {
     try {
+        await sceneManager.deleteAll(ctx);
+        sceneManager.handleInput(ctx);
       const userId = ctx.from?.id;
       
       if (!userId) {
@@ -106,7 +110,7 @@ export default class BotHandlers {
       const messageText = TextFormatter.removeEmojis((ctx.message as any)?.text || '');
 
         if (!messageText) {
-        await ctx.reply('Пожалуйста, отправьте текстовое сообщение.');
+        await sceneManager.replyAndStore(ctx,'Пожалуйста, отправьте текстовое сообщение.');
         return;
       }
 
@@ -122,32 +126,34 @@ export default class BotHandlers {
           break;
           
         case USER_STATES.WAITING_INTERPRETER:
-          await ctx.reply('Пожалуйста, сначала выберите сонник, нажав /start');
+          await sceneManager.replyAndStore(ctx,'Пожалуйста, сначала выберите сонник, нажав /start');
           break;
           
         case USER_STATES.PROCESSING:
-          await ctx.reply('Анализирую ваш сон, пожалуйста подождите...');
+          await sceneManager.replyAndStore(ctx,'Анализирую ваш сон, пожалуйста подождите...');
           break;
           
         default:
-          await ctx.reply('Для начала работы нажмите /start');
+          await sceneManager.replyAndStore(ctx,'Для начала работы нажмите /start');
       }
 
     } catch (error) {
       console.error('Error in handleTextMessage:', error);
-      await ctx.reply('Произошла ошибка при обработке сообщения. Попробуйте начать заново /start');
+      await sceneManager.replyAndStore(ctx,'Произошла ошибка при обработке сообщения. Попробуйте начать заново /start');
     }
   }
 
   // Обработка описания сна
   async handleDreamDescription(ctx: Context, userId: number, dreamText: string, session: Session): Promise<void> {
+      sceneManager.handleInput(ctx);
+      await sceneManager.deleteAll(ctx);
     if (dreamText.length < 10) {
-      await ctx.reply('Пожалуйста, опишите ваш сон более подробно (минимум 10 символов).');
+      await sceneManager.replyAndStore(ctx,'Пожалуйста, опишите ваш сон более подробно (минимум 10 символов).');
       return;
     }
 
     if (dreamText.length > 2000) {
-      await ctx.reply('Описание слишком длинное. Пожалуйста, сократите до 2000 символов.');
+      await sceneManager.replyAndStore(ctx,'Описание слишком длинное. Пожалуйста, сократите до 2000 символов.');
       return;
     }
 
@@ -159,18 +165,21 @@ export default class BotHandlers {
       answers: []
     });
 
-    await ctx.reply('✅ Описание сна получено!\n\nТеперь ответьте на несколько вопросов для более точного анализа:');
-    
+    await sceneManager.replyAndStore(ctx,'✅ Описание сна получено!\n\nТеперь ответьте на несколько вопросов для более точного анализа:');
+      sceneManager.handleInput(ctx);
+
     // Задаем первый вопрос
     await this.askNextQuestion(ctx, userId, 0);
   }
 
   // Обработка ответа на вопрос
   async handleQuestionAnswer(ctx: Context, userId: number, answerText: string, session: Session): Promise<void> {
+      sceneManager.handleInput(ctx);
+      await sceneManager.deleteAll(ctx);
     // Проверяем длину ответа (до 5 слов)
     const words = answerText.trim().split(/\s+/);
     if (words.length > 5) {
-      await ctx.reply('Пожалуйста, дайте краткий ответ (до 5 слов).');
+      await sceneManager.replyAndStore(ctx,'Пожалуйста, дайте краткий ответ (до 5 слов).');
       return;
     }
 
@@ -190,21 +199,23 @@ export default class BotHandlers {
   async askNextQuestion(ctx: Context, userId: number, questionIndex: number): Promise<void> {
     if (questionIndex < CLARIFYING_QUESTIONS.length) {
       const question = CLARIFYING_QUESTIONS[questionIndex];
-      await ctx.reply(`❓ **Вопрос ${questionIndex + 1}/${CLARIFYING_QUESTIONS.length}:**\n\n${question}`, {
+      await sceneManager.replyAndStore(ctx,`❓ **Вопрос ${questionIndex + 1}/${CLARIFYING_QUESTIONS.length}:**\n\n${question}`, {
         parse_mode: 'Markdown'
       });
+      sceneManager.handleInput(ctx);
     }
   }
 
   // Начать анализ сна
   async startDreamAnalysis(ctx: Context, userId: number, session: Session): Promise<void> {
+      await sceneManager.deleteAll(ctx);
     try {
       // Обновляем состояние на "обработка"
       await this.sessionManager.updateSessionState(userId, {
         state: USER_STATES.PROCESSING
       });
       await this.promoteTGChannel(ctx);
-      await ctx.reply('🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
+      await sceneManager.replyAndStore(ctx,'🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
         parse_mode: 'Markdown'
       });
 
@@ -225,16 +236,18 @@ export default class BotHandlers {
       const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан';
 
       // Отправляем результат пользователю
-      await ctx.reply(`✨ **Анализ сна завершен:**\n\n${this.escapeMarkdown(analysisResult)}`, {
+      await sceneManager.replyAndStore(ctx,`✨ **Анализ сна завершен:**\n\n${this.escapeMarkdown(analysisResult)}`, {
         parse_mode: 'Markdown'
       });
+
+      Logger.log(`User ${userId} received analysis: ${analysisResult}`);
 
       // Предлагаем начать заново
       const keyboard = Markup.inlineKeyboard([
         [Markup.button.callback('🔄 Проанализировать новый сон', 'restart_analysis')]
       ]);
 
-      await ctx.reply('Хотите проанализировать еще один сон?', keyboard);
+      await sceneManager.replyAndStore(ctx,'Хотите проанализировать еще один сон?', keyboard);
 
       // Обновляем состояние
       await this.sessionManager.updateSessionState(userId, {
@@ -246,7 +259,7 @@ export default class BotHandlers {
       console.error('Error in startDreamAnalysis:', error);
       
       const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-      await ctx.reply(`😔 Произошла ошибка при анализе сна: ${errorMessage}\n\nПопробуйте еще раз позже или нажмите /start для нового анализа.`);
+      await sceneManager.replyAndStore(ctx,`😔 Произошла ошибка при анализе сна: ${errorMessage}\n\nПопробуйте еще раз позже или нажмите /start для нового анализа.`);
       
       // Сбрасываем состояние при ошибке
       await this.sessionManager.updateSessionState(userId, {
@@ -294,11 +307,11 @@ export default class BotHandlers {
 
   // Обработчик неизвестных команд
   async handleUnknownCommand(ctx: Context): Promise<void> {
-    await ctx.reply('Неизвестная команда. Используйте /start для начала работы или /help для справки.');
+    await sceneManager.replyAndStore(ctx,'Неизвестная команда. Используйте /start для начала работы или /help для справки.');
   }
 
   async promoteTGChannel(ctx: Context): Promise<void> {
       const tgChannel = JSON.parse((await readFile('./assets/app-config.json')).toString()).TG_CHANNEL_TO_PROMOTE;
-      await ctx.reply(`Подписывайтесь на наш Telegram-канал ${tgChannel}`);
+      await sceneManager.replyAndStore(ctx,`Подписывайтесь на наш Telegram-канал ${tgChannel}`);
   }
 }

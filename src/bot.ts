@@ -1,4 +1,4 @@
-import {Context as TelegrafContext, Telegraf} from 'telegraf';
+import {Context as TelegrafContext, session, Telegraf} from 'telegraf';
 import {Express} from 'express';
 import SessionManager from './session_manager';
 import GeminiAPI from './gemini_api';
@@ -48,6 +48,7 @@ export default class DreamAnalyzerBot {
 
   // Настройка middleware
   setupMiddleware() {
+      this.bot.use(session());
     // Логирование входящих сообщений
     this.bot.use(logProcessTimeMiddleware);
 

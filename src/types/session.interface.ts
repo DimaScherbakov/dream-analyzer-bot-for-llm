@@ -1,5 +1,9 @@
 import {Interpreter} from "./prompt-data.interface";
 
+export interface SceneSession {
+    allMessageIds: number[];
+}
+
 export interface Session {
     state: string;
     interpreter?: Interpreter;
