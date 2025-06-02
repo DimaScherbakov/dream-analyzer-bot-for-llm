@@ -19,10 +19,6 @@ export default class BotHandlers {
     this.geminiAPI = geminiAPI;
   }
 
-  private escapeMarkdown(text: string): string {
-    return text.replace(/[_*[\]()~`>#+\-=|{}.!]/g, '\\$&');
-  }
-
   // Обработчик команды /start
   async handleStart(ctx: Context): Promise<void> {
     try {
@@ -236,7 +232,7 @@ export default class BotHandlers {
       const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан';
 
       // Отправляем результат пользователю
-      await sceneManager.replyAndStore(ctx,`✨ **Анализ сна завершен:**\n\n${this.escapeMarkdown(analysisResult)}`, {
+      await sceneManager.replyAndStore(ctx,`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
         parse_mode: 'Markdown'
       });
 
