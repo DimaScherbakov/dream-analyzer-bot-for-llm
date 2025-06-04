@@ -321,7 +321,7 @@ export default class BotHandlers {
       if(!(userId === 0 || userId)) return false;
       const session = await this.sessionManager.getSession(userId);
         const {countAIRequests = 0} = session;
-        return countAIRequests < 1;
+        return countAIRequests < 999;
     }
 
     async #greeting(ctx: Context): Promise<void> {
