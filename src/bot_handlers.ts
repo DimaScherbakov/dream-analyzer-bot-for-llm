@@ -29,6 +29,10 @@ export default class BotHandlers {
         await sceneManager.deleteAll(ctx);
         ctx.deleteMessage && await ctx.deleteMessage();
         const userId = ctx.from?.id;
+
+        if(!(await this.#hasAIPermission(userId))) {
+            return await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
+        }
       
       if (!userId) {
         throw new Error('User ID is undefined');
@@ -55,7 +59,8 @@ export default class BotHandlers {
 
     } catch (error) {
       console.error('Error in handleStart:', error);
-      await ctx.reply('Произошла ошибка при запуске. Попробуйте еще раз.');
+      Logger.log('Error in handleStart:', error);
+        await this.initialState(ctx)
     }
   }
 
@@ -230,30 +235,21 @@ export default class BotHandlers {
         dreamText: session.dreamText,
         answers: session.answers
       };
-
-      const {countAIRequests = 0} = session;
-      const hasAIPermission = countAIRequests < 1;
       // Вызываем API для анализа
-      const analysisResult = hasAIPermission ? await this.geminiAPI.callGeminiAPI(promptData) : 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан';
+      const analysisResult =await this.geminiAPI.callGeminiAPI(promptData);
 
       // Отправляем результат пользователю
-      await sceneManager.replyAndStore(ctx,`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
+      await ctx.reply(`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
         parse_mode: 'Markdown'
       });
+        await this.initialState(ctx);
 
       Logger.log(`User ${userId} received analysis: ${analysisResult}`);
-
-      // Предлагаем начать заново
-      const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('🔄 Проанализировать новый сон', 'restart_analysis')]
-      ]);
-
-      await sceneManager.replyAndStore(ctx,'Хотите проанализировать еще один сон?', keyboard);
 
       // Обновляем состояние
       await this.sessionManager.updateSessionState(userId, {
         state: USER_STATES.COMPLETED,
-        countAIRequests: hasAIPermission ? countAIRequests + 1 : countAIRequests
+        countAIRequests: session.countAIRequests + 1
       });
 
     } catch (error) {
@@ -318,5 +314,12 @@ export default class BotHandlers {
 
     async initialState(ctx: Context): Promise<void> {
         await ctx.reply('Добро пожаловать! Нажмите «Старт».', this.startButton);
+    }
+
+    async #hasAIPermission(userId: number | undefined): Promise<boolean> {
+      if(!(userId === 0 || userId)) return false;
+      const session = await this.sessionManager.getSession(userId);
+        const {countAIRequests = 0} = session;
+        return countAIRequests < 1;
     }
 }
