@@ -58,9 +58,10 @@ export default class DreamAnalyzerBot {
 
   // Настройка обработчиков команд и событий
   setupHandlers() {
-    // Команда /start
-    this.bot.command('start', (ctx: TelegrafContext) => this.handlers.handleStart(ctx));
-    
+      this.bot.on('new_chat_members', (ctx) => this.handlers.initialState(ctx));
+    // Команда start
+    this.bot.action('start', (ctx: TelegrafContext) => this.handlers.handleStart(ctx));
+
     // Команда /help
     this.bot.command('help', (ctx: TelegrafContext) => this.handlers.handleHelp(ctx));
 

@@ -13,6 +13,9 @@ import {Logger} from "./logger";
 export default class BotHandlers {
   private sessionManager: SessionManager;
   private geminiAPI: GeminiAPI;
+  private startButton = Markup.inlineKeyboard([
+      Markup.button.callback('🚀 Старт', 'start')
+  ]);
 
   constructor(sessionManager: SessionManager, geminiAPI: GeminiAPI) {
     this.sessionManager = sessionManager;
@@ -24,6 +27,7 @@ export default class BotHandlers {
     try {
         sceneManager.handleInput(ctx);
         await sceneManager.deleteAll(ctx);
+        ctx.deleteMessage && await ctx.deleteMessage();
         const userId = ctx.from?.id;
       
       if (!userId) {
@@ -123,6 +127,7 @@ export default class BotHandlers {
           
         case USER_STATES.WAITING_INTERPRETER:
           await sceneManager.replyAndStore(ctx,'Пожалуйста, сначала выберите сонник, нажав /start');
+          await this.initialState(ctx);
           break;
           
         case USER_STATES.PROCESSING:
@@ -130,7 +135,7 @@ export default class BotHandlers {
           break;
           
         default:
-          await sceneManager.replyAndStore(ctx,'Для начала работы нажмите /start');
+          await this.initialState(ctx);
       }
 
     } catch (error) {
@@ -310,4 +315,8 @@ export default class BotHandlers {
       const tgChannel = JSON.parse((await readFile('./assets/app-config.json')).toString()).TG_CHANNEL_TO_PROMOTE;
       await sceneManager.replyAndStore(ctx,`Подписывайтесь на наш Telegram-канал ${tgChannel}`);
   }
+
+    async initialState(ctx: Context): Promise<void> {
+        await ctx.reply('Добро пожаловать! Нажмите «Старт».', this.startButton);
+    }
 }
