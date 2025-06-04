@@ -29,6 +29,7 @@ export default class BotHandlers {
         await sceneManager.deleteAll(ctx);
         ctx.deleteMessage && await ctx.deleteMessage();
         const userId = ctx.from?.id;
+        await this.#greeting(ctx);
 
         if(!(await this.#hasAIPermission(userId))) {
             return await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
@@ -321,5 +322,9 @@ export default class BotHandlers {
       const session = await this.sessionManager.getSession(userId);
         const {countAIRequests = 0} = session;
         return countAIRequests < 1;
+    }
+
+    async #greeting(ctx: Context): string {
+      await ctx.reply('🪬');
     }
 }
