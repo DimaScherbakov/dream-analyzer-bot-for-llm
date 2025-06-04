@@ -324,7 +324,7 @@ export default class BotHandlers {
         return countAIRequests < 1;
     }
 
-    async #greeting(ctx: Context): string {
+    async #greeting(ctx: Context): Promise<void> {
       await ctx.reply('🪬');
     }
 }
