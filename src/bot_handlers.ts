@@ -243,7 +243,7 @@ export default class BotHandlers {
       await ctx.reply(`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
         parse_mode: 'Markdown'
       });
-        await this.initialState(ctx);
+        await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
 
       Logger.log(`User ${userId} received analysis: ${analysisResult}`);
 
