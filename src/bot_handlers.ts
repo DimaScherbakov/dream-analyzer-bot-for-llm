@@ -176,7 +176,7 @@ export default class BotHandlers {
       sceneManager.handleInput(ctx);
 
     // Задаем первый вопрос
-    await this.askNextQuestion(ctx, userId, 0);
+      setTimeout(async() => await this.askNextQuestion(ctx, userId, 0));
   }
 
   // Обработка ответа на вопрос
