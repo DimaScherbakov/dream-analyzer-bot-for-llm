@@ -222,6 +222,7 @@ export default class BotHandlers {
         state: USER_STATES.PROCESSING
       });
       await this.promoteTGChannel(ctx);
+      await new Promise(resolve => setTimeout(resolve, 30000)); // Задержка для лучшего UX
       await sceneManager.replyAndStore(ctx,'🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
         parse_mode: 'Markdown'
       });
@@ -246,8 +247,6 @@ export default class BotHandlers {
 
       // Отправляем результат пользователю
       await ctx.replyWithMarkdownV2(`✨ **Анализ сна завершен:**\n\n${analysisResult}`);
-        await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
-
       Logger.log(`User ${userId} received analysis: ${analysisResult}`);
 
       // Обновляем состояние
@@ -255,6 +254,10 @@ export default class BotHandlers {
         state: USER_STATES.COMPLETED,
         countAIRequests: session.countAIRequests + 1
       });
+
+      if(!(await this.#hasAIPermission(userId))) {
+          await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
+      }
 
     } catch (error) {
       console.error('Error in startDreamAnalysis:', error);
@@ -313,7 +316,7 @@ export default class BotHandlers {
 
   async promoteTGChannel(ctx: Context): Promise<void> {
       const tgChannel = JSON.parse((await readFile('./assets/app-config.json')).toString()).TG_CHANNEL_TO_PROMOTE;
-      await sceneManager.replyAndStore(ctx,`Подписывайтесь на наш Telegram-канал ${tgChannel}`);
+      await sceneManager.replyAndStore(ctx,`Подпишись на наш телеграм канал и получи ответ ${tgChannel}`);
   }
 
     async initialState(ctx: Context): Promise<void> {
