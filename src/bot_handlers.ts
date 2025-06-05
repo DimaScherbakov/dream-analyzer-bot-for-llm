@@ -222,7 +222,7 @@ export default class BotHandlers {
         state: USER_STATES.PROCESSING
       });
       await this.promoteTGChannel(ctx);
-      await new Promise(resolve => setTimeout(resolve, 30000)); // Задержка для лучшего UX
+      await new Promise(resolve => setTimeout(resolve, 15000)); // Задержка для лучшего UX
       await sceneManager.replyAndStore(ctx,'🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
         parse_mode: 'Markdown'
       });
@@ -258,7 +258,7 @@ export default class BotHandlers {
       if(!(await this.#hasAIPermission(userId))) {
           await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
       }
-
+        await sceneManager.deleteAll(ctx);
     } catch (error) {
       console.error('Error in startDreamAnalysis:', error);
       
@@ -320,7 +320,9 @@ export default class BotHandlers {
   }
 
     async initialState(ctx: Context): Promise<void> {
+        sceneManager.handleInput(ctx);
         await ctx.reply('Добро пожаловать! Нажмите «Старт».', this.startButton);
+        await sceneManager.deleteAll(ctx);
     }
 
     async #hasAIPermission(userId: number | undefined): Promise<boolean> {
