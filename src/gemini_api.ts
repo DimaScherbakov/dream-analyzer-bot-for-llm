@@ -1,6 +1,7 @@
 import {PromptData} from "./types/prompt-data.interface";
 import {GenerateContentConfig, GoogleGenAI} from "@google/genai";
 import {Logger} from "./logger";
+import {TextFormatter} from "./TextFormatter";
 
 
 export default class GeminiAPI {
@@ -49,9 +50,9 @@ export default class GeminiAPI {
         throw new Error('Некорректный ответ от Gemini API');
       }
 
-      Logger.log('[usageMetadata]', `${response.text?.substring(0, 100)} --> prompt:${response.usageMetadata?.promptTokenCount} + candidates:${response.usageMetadata?.candidatesTokenCount} = total:${response.usageMetadata?.totalTokenCount}`);
+      Logger.log('[gemini]', `${response.text?.substring(0, 200)} --> prompt:${response.usageMetadata?.promptTokenCount} + candidates:${response.usageMetadata?.candidatesTokenCount} = total:${response.usageMetadata?.totalTokenCount}`);
       // Ограничиваем длину ответа для Telegram (максимум 4096 символов)
-      return this.truncateText(response.text || '', 4000);
+      return TextFormatter.truncateText(response.text || '', 4000);
       
     } catch (error) {
       console.error('Ошибка при вызове Gemini API:', error);
@@ -108,23 +109,6 @@ ${dreamText}
     return prompt;
   }
 
-  // Обрезка текста до указанной длины
-  truncateText(text: string, maxLength: number): string {
-    if (text.length <= maxLength) {
-      return text;
-    }
-    
-    // Обрезаем по словам, чтобы не разрывать предложения
-    const truncated = text.substring(0, maxLength);
-    const lastSpaceIndex = truncated.lastIndexOf(' ');
-    
-    if (lastSpaceIndex > 0) {
-      return truncated.substring(0, lastSpaceIndex) + '...';
-    }
-    
-    return truncated + '...';
-  }
-
   // Проверка доступности API
   async checkAPIHealth() {
     try {
@@ -134,7 +118,7 @@ ${dreamText}
         answers: ['радость', 'коричневый', 'никого', 'дом', 'собака говорила']
       };
       
-      await this.callGeminiAPI(testPrompt);
+      // await this.callGeminiAPI(testPrompt);
       return true;
     } catch (error) {
       console.error('API Health Check Failed:', (error as Error).message);

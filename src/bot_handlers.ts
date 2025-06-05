@@ -237,12 +237,15 @@ export default class BotHandlers {
         answers: session.answers
       };
       // Вызываем API для анализа
-      const analysisResult =await this.geminiAPI.callGeminiAPI(promptData);
+      const analysisResult =await this.geminiAPI.callGeminiAPI(promptData)
+          .then(text => {
+              Logger.log(`[gemini] original ${text}`);
+              return text;
+          })
+          .then(text => TextFormatter.escapeMarkdown(text));
 
       // Отправляем результат пользователю
-      await ctx.reply(`✨ **Анализ сна завершен:**\n\n${analysisResult}`, {
-        parse_mode: 'Markdown'
-      });
+      await ctx.replyWithMarkdownV2(`✨ **Анализ сна завершен:**\n\n${analysisResult}`);
         await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
 
       Logger.log(`User ${userId} received analysis: ${analysisResult}`);
