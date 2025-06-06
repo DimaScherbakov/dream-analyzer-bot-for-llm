@@ -288,13 +288,12 @@ export default class BotHandlers {
         state: USER_STATES.COMPLETED,
         countAIRequests: session.countAIRequests + 1
       });
-
+        await sceneManager.deleteAll(ctx);
       if(!(await this.#hasAIPermission(userId))) {
           await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
       } else {
           await this.initialState(ctx);
       }
-        await sceneManager.deleteAll(ctx);
     } catch (error) {
       console.error('Error in startDreamAnalysis:', error);
       
