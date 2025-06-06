@@ -223,6 +223,7 @@ export default class BotHandlers {
       });
       await this.promoteTGChannel(ctx);
       await new Promise(resolve => setTimeout(resolve, 15000)); // Задержка для лучшего UX
+      await sceneManager.deleteAll(ctx);
       await sceneManager.replyAndStore(ctx,'🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
         parse_mode: 'Markdown'
       });
@@ -245,6 +246,7 @@ export default class BotHandlers {
           })
           .then(text => TextFormatter.escapeMarkdown(text));
 
+        await sceneManager.deleteAll(ctx);
       // Отправляем результат пользователю
       await ctx.replyWithMarkdownV2(`✨ **Анализ сна завершен:**\n\n${analysisResult}`);
       Logger.log(`User ${userId} received analysis: ${analysisResult}`);
@@ -257,6 +259,8 @@ export default class BotHandlers {
 
       if(!(await this.#hasAIPermission(userId))) {
           await sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', this.startButton);
+      } else {
+          await this.initialState(ctx);
       }
         await sceneManager.deleteAll(ctx);
     } catch (error) {
