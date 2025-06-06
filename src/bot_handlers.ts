@@ -75,10 +75,35 @@ export default class BotHandlers {
         throw new Error('User ID is undefined');
       }
 
-      const interpreterKey = ctx.match?.[1]; // получаем ключ из callback_data
+      const callbackData = (ctx.callbackQuery as any)?.data;
+      if (callbackData === 'interpreter_confirm') {
+        const session = await this.sessionManager.getSession(userId);
+        await sceneManager.replyAndStore(ctx, '⚠️ Отправьте описание одного сна одним сообщением')
+        if (!session.interpreter) {
+          await ctx.answerCbQuery('Сначала выберите сонник');
+          return;
+        }
+        
+        const interpreter = DREAM_INTERPRETERS[session.interpreter];
+        await ctx.answerCbQuery(`Выбран ${interpreter.name}`);
+        await ctx.editMessageText(interpreter.description, {
+          parse_mode: 'Markdown'
+        });
+        sceneManager.store(ctx, ctx.callbackQuery?.message?.message_id || 0);
+        return;
+      }
+
+      const interpreterKey = callbackData?.replace('interpreter_', '');
       
       if (!interpreterKey || !DREAM_INTERPRETERS[interpreterKey]) {
         await ctx.answerCbQuery('Неизвестный сонник');
+        return;
+      }
+
+      // Проверяем, не выбран ли уже этот сонник
+      const currentSession = await this.sessionManager.getSession(userId);
+      if (currentSession.interpreter === interpreterKey) {
+        await ctx.answerCbQuery('Этот сонник уже выбран');
         return;
       }
 
@@ -88,13 +113,20 @@ export default class BotHandlers {
         interpreter: interpreterKey as Interpreter,
       });
 
-      const interpreter = DREAM_INTERPRETERS[interpreterKey];
+      await ctx.answerCbQuery(`Выбран ${DREAM_INTERPRETERS[interpreterKey].name}`);
       
-      await ctx.answerCbQuery(`Выбран ${interpreter.name}`);
-      await ctx.editMessageText(interpreter.description, {
-        parse_mode: 'Markdown'
+      // Обновляем сообщение, показывая выбранный сонник и его описание
+      const message = `Выбран сонник: ${DREAM_INTERPRETERS[interpreterKey].name}\n\n${DREAM_INTERPRETERS[interpreterKey].description}\n\nНажмите "Подтвердить" для продолжения или выберите другой сонник.`;
+      await ctx.editMessageText(message, {
+        parse_mode: 'Markdown',
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback('📖 Сонник Миллера', 'interpreter_miller')],
+          [Markup.button.callback('🧠 Сонник Фрейда', 'interpreter_freud')],
+          [Markup.button.callback('🔮 Сонник Цветкова', 'interpreter_tsvetkov')],
+          [Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff')],
+          [Markup.button.callback('✅ Подтвердить', 'interpreter_confirm')]
+        ])
       });
-        sceneManager.store(ctx, ctx.callbackQuery?.message?.message_id || 0);
 
     } catch (error) {
       console.error('Error in handleInterpreterChoice:', error);
