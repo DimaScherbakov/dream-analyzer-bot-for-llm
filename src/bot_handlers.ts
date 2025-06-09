@@ -47,10 +47,14 @@ export default class BotHandlers {
 
       // Создаем кнопки для выбора сонника
       const keyboard = Markup.inlineKeyboard([
-        [Markup.button.callback('📖 Сонник Миллера', 'interpreter_miller')],
-        [Markup.button.callback('🧠 Сонник Фрейда', 'interpreter_freud')],
-        [Markup.button.callback('🔮 Сонник Цветкова', 'interpreter_tsvetkov')],
-        [Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff')]
+          [
+            Markup.button.callback('📖 Сонник Миллера', 'interpreter_miller'),
+            Markup.button.callback('🧠 Сонник Фрейда', 'interpreter_freud'),
+          ],
+        [
+          Markup.button.callback('🔮 Сонник Цветкова', 'interpreter_tsvetkov'),
+          Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff')
+        ]
       ]);
 
       await ctx.reply(welcomeMessage, {
@@ -120,11 +124,17 @@ export default class BotHandlers {
       await ctx.editMessageText(message, {
         parse_mode: 'Markdown',
         ...Markup.inlineKeyboard([
-          [Markup.button.callback('📖 Сонник Миллера', 'interpreter_miller')],
-          [Markup.button.callback('🧠 Сонник Фрейда', 'interpreter_freud')],
-          [Markup.button.callback('🔮 Сонник Цветкова', 'interpreter_tsvetkov')],
-          [Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff')],
-          [Markup.button.callback('✅ Подтвердить', 'interpreter_confirm')]
+            [
+              Markup.button.callback('📖 Сонник Миллера', 'interpreter_miller'),
+              Markup.button.callback('🧠 Сонник Фрейда', 'interpreter_freud')
+            ],
+          [
+            Markup.button.callback('🔮 Сонник Цветкова', 'interpreter_tsvetkov'),
+            Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff')
+          ],
+            [
+              Markup.button.callback('✅ Подтвердить', 'interpreter_confirm')
+            ]
         ])
       });
 
