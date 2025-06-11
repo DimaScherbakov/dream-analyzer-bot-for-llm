@@ -1,84 +1,68 @@
-const axios = require('axios');
+import {PromptData} from "../types/prompt-data.interface";
+import {GenerateContentConfig, GoogleGenAI} from "@google/genai";
+import {Logger} from "./logger";
+import {TextFormatter} from "./text-formatter";
 
-class GeminiAPI {
-  constructor() {
-    this.apiKey = process.env.GEMINI_API_KEY;
-    this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent';
-    
-    if (!this.apiKey) {
+
+export default class GeminiAPI {
+  private readonly model: string = 'gemini-2.0-flash-exp';
+  private ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+
+    constructor() {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
       throw new Error('GEMINI_API_KEY не найден в переменных окружения');
     }
   }
 
   // Основная функция для вызова Gemini API
-  async callGeminiAPI(promptData) {
+  async callGeminiAPI(promptData: PromptData): Promise<string> {
     try {
       const { interpreter, dreamText, answers } = promptData;
       
       // Формируем промпт для анализа сна
       const prompt = this.buildPrompt(interpreter, dreamText, answers);
-      
-      const requestData = {
-        contents: [{
-          parts: [{
-            text: prompt
-          }]
-        }],
-        generationConfig: {
+
+      const config: GenerateContentConfig = {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
           maxOutputTokens: 2048,
-        }
-      };
+          httpOptions: {
+              timeout: 30000, // 30 секунд таймаут
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+          },
+        };
 
       console.log('Отправка запроса к Gemini API...');
-      
-      const response = await axios.post(
-        `${this.baseUrl}?key=${this.apiKey}`,
-        requestData,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 30000 // 30 секунд таймаут
-        }
-      );
+
+      const response = await this.ai.models.generateContent({
+          model: this.model,
+          contents: prompt,
+          config,
+      });
 
       // Проверяем ответ
-      if (!response.data || !response.data.candidates || response.data.candidates.length === 0) {
+      if (!response.candidates || response.candidates.length === 0) {
         throw new Error('Некорректный ответ от Gemini API');
       }
 
-      const generatedText = response.data.candidates[0].content.parts[0].text;
-      
+      Logger.log('[gemini]', `${response.text?.substring(0, 200)} --> prompt:${response.usageMetadata?.promptTokenCount} + candidates:${response.usageMetadata?.candidatesTokenCount} = total:${response.usageMetadata?.totalTokenCount}`);
       // Ограничиваем длину ответа для Telegram (максимум 4096 символов)
-      return this.truncateText(generatedText, 4000);
+      return TextFormatter.truncateText(response.text || '', 4000);
       
     } catch (error) {
       console.error('Ошибка при вызове Gemini API:', error);
-      
-      if (error.response) {
-        console.error('Ответ сервера:', error.response.status, error.response.data);
-        
-        if (error.response.status === 429) {
-          throw new Error('Превышен лимит запросов к AI. Попробуйте позже.');
-        } else if (error.response.status === 401) {
-          throw new Error('Ошибка аутентификации AI сервиса.');
-        } else {
-          throw new Error('Сервис AI временно недоступен.');
-        }
-      } else if (error.code === 'ECONNABORTED') {
-        throw new Error('Превышено время ожидания ответа от AI.');
-      } else {
-        throw new Error('Произошла ошибка при обращении к AI.');
-      }
+      throw new Error('Произошла ошибка при обращении к AI.');
     }
   }
 
   // Построение промпта для анализа сна
-  buildPrompt(interpreter, dreamText, answers) {
-    const interpreterNames = {
+  buildPrompt(interpreter: 'miller' | 'freud' | 'tsvetkov' | 'loff', dreamText: string, answers: string[]): string {
+    const interpreterNames: Record<typeof interpreter, string> = {
       miller: 'Миллера',
       freud: 'Фрейда', 
       tsvetkov: 'Цветкова',
@@ -125,39 +109,20 @@ ${dreamText}
     return prompt;
   }
 
-  // Обрезка текста до указанной длины
-  truncateText(text, maxLength) {
-    if (text.length <= maxLength) {
-      return text;
-    }
-    
-    // Обрезаем по словам, чтобы не разрывать предложения
-    const truncated = text.substring(0, maxLength);
-    const lastSpaceIndex = truncated.lastIndexOf(' ');
-    
-    if (lastSpaceIndex > 0) {
-      return truncated.substring(0, lastSpaceIndex) + '...';
-    }
-    
-    return truncated + '...';
-  }
-
   // Проверка доступности API
   async checkAPIHealth() {
     try {
-      const testPrompt = {
+      const testPrompt: PromptData = {
         interpreter: 'miller',
         dreamText: 'Я видел во сне собаку.',
         answers: ['радость', 'коричневый', 'никого', 'дом', 'собака говорила']
       };
       
-      await this.callGeminiAPI(testPrompt);
+      // await this.callGeminiAPI(testPrompt);
       return true;
     } catch (error) {
-      console.error('API Health Check Failed:', error.message);
+      console.error('API Health Check Failed:', (error as Error).message);
       return false;
     }
   }
 }
-
-module.exports = GeminiAPI;

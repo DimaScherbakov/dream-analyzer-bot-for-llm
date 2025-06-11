@@ -1,7 +1,9 @@
 import {Interpreter} from "./prompt-data.interface";
+import {Scenes} from "telegraf";
 
-export interface SceneSession {
-    allMessageIds: number[];
+export interface SceneSession extends Scenes.WizardSession {
+    allMessageIds?: number[];
+    isGreeted?: boolean;
 }
 
 export interface Session {
