@@ -1,7 +1,7 @@
-import {Context as TelegramContext} from "telegraf/typings/context";
-import {SceneSession, Session} from "./session.interface";
+import {SceneSession} from "./session.interface";
+import {Scenes} from "telegraf";
 
-export interface Context extends TelegramContext {
-    session?: SceneSession;
+export interface MyContext extends Scenes.WizardContext {
+    session: SceneSession;
     match?: RegExpMatchArray;
 }

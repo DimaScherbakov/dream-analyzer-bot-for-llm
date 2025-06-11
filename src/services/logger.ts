@@ -1,4 +1,4 @@
-import {LOG_FOLDER} from "./constants";
+import {LOG_FOLDER} from "../constants";
 import * as fs from "node:fs";
 import path from "node:path";
 import * as os from "node:os";

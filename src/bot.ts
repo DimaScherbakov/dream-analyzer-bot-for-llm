@@ -1,18 +1,30 @@
-import {Context as TelegrafContext, session, Telegraf} from 'telegraf';
-import {Express} from 'express';
-import SessionManager from './session_manager';
-import GeminiAPI from './gemini_api';
-import BotHandlers from "./bot_handlers";
+import {Scenes, session, Telegraf} from 'telegraf';
 import logProcessTimeMiddleware from "./middlewares/log-process-time.middleware";
 import checkChatTypeMiddleware from "./middlewares/check-chat-type.middleware";
+import GeminiAPI from "./services/gemini-api";
+import {Stage} from "telegraf/scenes";
+import {User} from "./user";
+import userFactory from "./middlewares/user-factory.meddleware";
+import SceneManager from "./services/scene-manager";
+import {userDreamInputSceneFactory} from "./scenes/user-dream-input.scene";
+import {askQuestionsSceneFactory} from "./scenes/ask-questions.scene";
+import {analyzeDreamSceneFactory} from "./scenes/analyze-dream.scene";
+import {SessionManager} from "./services/session-manager";
+import {selectInterpreterSceneFactory} from "./scenes/select-interpreter/select-interpreter.scene";
 
 export default class DreamAnalyzerBot {
-  private bot!: Telegraf<TelegrafContext>;
-  private sessionManager!: SessionManager;
+  private bot!: Telegraf<Scenes.WizardContext>;
   private geminiAPI!: GeminiAPI;
-  private handlers!: BotHandlers;
-  
-  constructor() {
+  sceneManager!: SceneManager;
+  private analyzeDreamStage = new Stage([
+      selectInterpreterSceneFactory(this),
+      userDreamInputSceneFactory(this),
+      askQuestionsSceneFactory(this),
+      analyzeDreamSceneFactory(this)
+  ]);
+  user!: User;
+
+    constructor() {
     this.initialize();
   }
 
@@ -24,10 +36,8 @@ export default class DreamAnalyzerBot {
         throw new Error('BOT_TOKEN не найден в переменных окружения');
       }
 
-      // Создаем экземпляры сервисов
-      this.sessionManager = new SessionManager();
       this.geminiAPI = new GeminiAPI();
-      this.handlers = new BotHandlers(this.sessionManager, this.geminiAPI);
+      this.sceneManager = new SceneManager();
 
       // Создаем бота
       this.bot = new Telegraf(process.env.BOT_TOKEN);
@@ -48,37 +58,35 @@ export default class DreamAnalyzerBot {
 
   // Настройка middleware
   setupMiddleware() {
-      this.bot.use(session());
+    const sessionManger = new SessionManager();
+    this.bot.use(session());
     // Логирование входящих сообщений
     this.bot.use(logProcessTimeMiddleware);
+    this.bot.use(async (ctx, next) => {
+        this.user = userFactory(ctx, sessionManger);
+        await next();
+    });
 
     // Middleware для проверки типа чата (только приватные сообщения)
     this.bot.use(checkChatTypeMiddleware);
+    this.bot.use((ctx, next) => {
+        // можно использовать Composer для более гибкой маршрутизации логики https://chatgpt.com/g/g-mzFm1dKjW-chat/c/68497323-5d34-800f-9f03-c207aa5f161b
+        return this.analyzeDreamStage.middleware()(ctx, next) as any;
+    });
   }
 
   // Настройка обработчиков команд и событий
   setupHandlers() {
-      this.bot.on('new_chat_members', (ctx) => this.handlers.initialState(ctx));
     // Команда start
-    this.bot.action('start', (ctx: TelegrafContext) => this.handlers.handleStart(ctx));
-
-    // Команда /help
-    this.bot.command('help', (ctx: TelegrafContext) => this.handlers.handleHelp(ctx));
-
-    // Обработчик выбора сонника
-    this.bot.action(/^interpreter_(.+)$/, (ctx: TelegrafContext) => this.handlers.handleInterpreterChoice(ctx));
-    
-    // Обработчик перезапуска анализа
-    this.bot.action('restart_analysis', (ctx: TelegrafContext) => this.handlers.handleRestartAnalysis(ctx));
-
-    // Обработчик текстовых сообщений
-    this.bot.on('text', (ctx: TelegrafContext) => this.handlers.handleTextMessage(ctx));
+      this.bot.action('start', (ctx) => (ctx as any).scene.enter('selectInterpreterScene'));
+      this.bot.command('start', (ctx) => (ctx as any).scene.enter('selectInterpreterScene'));
+      this.bot.on('new_chat_members', (ctx) => (ctx as any).scene.enter('selectInterpreterScene'));
 
     // Обработчик неизвестных команд
-    this.bot.on('message', (ctx: TelegrafContext) => this.handlers.handleUnknownCommand(ctx));
+    this.bot.on('message', (ctx) => this.sceneManager.initialState(ctx));
 
     // Обработка ошибок
-    this.bot.catch((err: unknown, ctx: TelegrafContext) => {
+    this.bot.catch((err: unknown, ctx) => {
       console.error('Bot error:', err);
       console.error('Update:', ctx.update);
       
@@ -150,8 +158,8 @@ export default class DreamAnalyzerBot {
       this.bot.stop(signal);
       
       // Закрываем соединение с Redis
-      if (this.sessionManager) {
-        await this.sessionManager.close();
+      if (this.user) {
+        await this.user.closeDialogSession();
       }
       
       console.log('Bot stopped successfully');
@@ -165,11 +173,6 @@ export default class DreamAnalyzerBot {
   // Получить экземпляр бота
   getBot() {
     return this.bot;
-  }
-
-  // Получить экземпляр менеджера сессий
-  getSessionManager() {
-    return this.sessionManager;
   }
 
   // Получить экземпляр Gemini API

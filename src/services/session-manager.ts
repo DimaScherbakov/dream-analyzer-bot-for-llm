@@ -1,10 +1,10 @@
-import { USER_STATES } from "./constants";
-import { Session } from "./types/session.interface";
-import { SessionStorage } from "./types/session-storage.interface";
-import { RedisSessionStorage } from "./storage/redis-session-storage";
-import { MemorySessionStorage } from "./storage/memory-session-storage";
+import { USER_STATES } from "../constants";
+import { Session } from "../types/session.interface";
+import { SessionStorage } from "../types/session-storage.interface";
+import { RedisSessionStorage } from "../storage/redis-session-storage";
+import { MemorySessionStorage } from "../storage/memory-session-storage";
 
-export default class SessionManager {
+export class SessionManager {
   private storage: SessionStorage;
 
   constructor() {
@@ -36,7 +36,7 @@ export default class SessionManager {
   }
 
   // Добавить ответ на вопрос
-  async addAnswer(userId: number, answer: any): Promise<Session> {
+  async addAnswer(userId: number, answer: string): Promise<Session> {
     const session = await this.getSession(userId);
     session.answers?.push(answer);
     session.currentQuestion++;

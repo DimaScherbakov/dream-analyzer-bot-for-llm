@@ -82,7 +82,8 @@ export default class Server {
         // Здесь можно добавить сбор статистики
         res.json({
           message: 'Statistics endpoint',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+            storageData: await this.bot?.user.getDialogSession(),
         });
       } catch (error) {
         console.error('Stats error:', error);
