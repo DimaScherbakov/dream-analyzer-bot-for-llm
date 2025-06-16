@@ -11,7 +11,8 @@ export default class SceneManager {
         ],
         [
             Markup.button.callback('🔮 Сонник Цветкова', 'interpreter_tsvetkov'),
-            Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff')
+            // Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff'),
+            Markup.button.callback('💭 Сонник Канта', 'interpreter_kant')
         ],
     ];
 
