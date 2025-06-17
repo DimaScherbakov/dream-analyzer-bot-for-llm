@@ -1,6 +1,7 @@
 import { RedisClientType, createClient } from 'redis';
 import { Session } from "../types/session.interface";
 import { SessionStorage } from "../types/session-storage.interface";
+import {Logger} from "../services/logger";
 
 export class RedisSessionStorage implements SessionStorage {
   private redisClient: RedisClientType | null = null;
@@ -48,16 +49,35 @@ export class RedisSessionStorage implements SessionStorage {
       if (!this.redisClient) {
         throw new Error('Redis client is not available');
       }
+      const ttl = await this.redisClient.ttl(`session:${userId}`);
+      const dayTtl = 3600 * 24; // TTL 24 часа
+      Logger.log('Setting session in Redis:', userId, 'TTL:', ttl);
       await this.redisClient.setEx(
         `session:${userId}`,
-        3600 * 24, // TTL 24 часа
-        JSON.stringify(sessionData)
+        ttl > 0 ? ttl : dayTtl, // если TTL уже установлен, используем его, иначе устанавливаем 24 часа
+        JSON.stringify(sessionData),
       );
     } catch (error) {
       console.error('Error setting session in Redis:', error);
       throw error;
     }
   }
+
+    async updateSession(userId: number, sessionData: Session): Promise<void> {
+        try {
+            if (!this.redisClient) {
+                throw new Error('Redis client is not available');
+            }
+            await this.redisClient.setEx(
+                `session:${userId}`,
+                JSON.stringify(sessionData),
+                {keepttl: true} // сохраняем TTL
+            );
+        } catch (error) {
+            console.error('Error setting session in Redis:', error);
+            throw error;
+        }
+    }
 
   async deleteSession(userId: string): Promise<void> {
     try {
