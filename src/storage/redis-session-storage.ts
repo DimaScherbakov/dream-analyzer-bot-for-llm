@@ -63,22 +63,6 @@ export class RedisSessionStorage implements SessionStorage {
     }
   }
 
-    async updateSession(userId: number, sessionData: Session): Promise<void> {
-        try {
-            if (!this.redisClient) {
-                throw new Error('Redis client is not available');
-            }
-            await this.redisClient.setEx(
-                `session:${userId}`,
-                JSON.stringify(sessionData),
-                {keepttl: true} // сохраняем TTL
-            );
-        } catch (error) {
-            console.error('Error setting session in Redis:', error);
-            throw error;
-        }
-    }
-
   async deleteSession(userId: string): Promise<void> {
     try {
       if (!this.redisClient) {
