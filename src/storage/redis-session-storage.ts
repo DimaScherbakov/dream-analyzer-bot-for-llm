@@ -37,7 +37,13 @@ export class RedisSessionStorage implements SessionStorage {
         throw new Error('Redis client is not available');
       }
       const sessionData = await this.redisClient.get(`session:${userId}`);
-      return sessionData ? JSON.parse(sessionData) : this.createNewSession();
+      let session = this.createNewSession();
+      if (sessionData) {
+          session = JSON.parse(sessionData);
+      } else {
+          Logger.users(userId);
+      }
+      return session;
     } catch (error) {
       console.error('Error getting session from Redis:', error);
       return this.createNewSession();

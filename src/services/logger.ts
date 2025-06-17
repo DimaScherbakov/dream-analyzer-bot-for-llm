@@ -21,4 +21,20 @@ export class Logger {
 
         fs.appendFileSync(logFilePath, logData, 'utf8');
     }
+
+    public static users(...args: any[]) {
+        // Создаем директорию для логов, если она не существует
+        if (!fs.existsSync(LOG_FOLDER)) {
+            fs.mkdirSync(LOG_FOLDER, { recursive: true });
+        }
+        // Проверяем существование файла лога для текущей даты
+        const usersFilePath = path.join(LOG_FOLDER, `users.txt`);
+        if (!fs.existsSync(usersFilePath)) {
+            fs.writeFileSync(usersFilePath, '', 'utf8');
+        }
+        const time = new Date().toLocaleTimeString();
+        const logData = `[${time}] ${args.join(' ')}\n`;
+
+        fs.appendFileSync(usersFilePath, logData, 'utf8');
+    }
 }
