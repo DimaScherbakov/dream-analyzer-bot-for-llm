@@ -61,13 +61,14 @@ export default class GeminiAPI {
   }
 
   // Построение промпта для анализа сна
-  buildPrompt(interpreter: 'miller' | 'freud' | 'tsvetkov' | 'loff' | 'kant', dreamText: string, answers: string[]): string {
+  buildPrompt(interpreter: 'miller' | 'freud' | 'tsvetkov' | 'loff' | 'kant' | 'jung', dreamText: string, answers: string[]): string {
     const interpreterNames: Record<typeof interpreter, string> = {
       miller: 'Миллера',
       freud: 'Фрейда', 
       tsvetkov: 'Цветкова',
       loff: 'Лоффа',
-      kant: 'Канта'
+      kant: 'Канта',
+      jung: 'Юнга'
     };
 
     const interpreterName = interpreterNames[interpreter] || 'неизвестного';
