@@ -24,7 +24,7 @@ export class MemorySessionStorage implements SessionStorage {
     // Ничего не делаем, так как это хранилище в памяти
   }
 
-  private createNewSession(): Session {
+  public createNewSession(): Session {
     return {
       state: "WAITING_INTERPRETER",
       interpreter: undefined,

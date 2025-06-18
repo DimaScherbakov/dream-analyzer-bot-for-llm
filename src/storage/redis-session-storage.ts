@@ -87,7 +87,7 @@ export class RedisSessionStorage implements SessionStorage {
     }
   }
 
-  private createNewSession(): Session {
+  public createNewSession(): Session {
     return {
       state: "WAITING_INTERPRETER",
       interpreter: undefined,

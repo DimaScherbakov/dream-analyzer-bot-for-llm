@@ -1,5 +1,6 @@
 import {SessionManager} from "./services/session-manager";
 import {Session} from "./types/session.interface";
+import {readFile} from "node:fs/promises";
 
 export class User {
 
@@ -7,6 +8,10 @@ export class User {
         public id: number,
         private sessionManager: SessionManager
     ) {}
+
+    get isAdmin(): Promise<boolean> {
+        return this.getAdmins().then(admins => admins.includes(this.id));
+    }
 
     async getDialogSession() {
         return this.sessionManager.getSession(this.id);
@@ -22,6 +27,7 @@ export class User {
 
     async hasAIPermission(): Promise<boolean> {
         if(!(this.id === 0 || this.id)) return false;
+        if (await this.isAdmin) return true;
         const session = await this.sessionManager.getSession(this.id);
         const {countAIRequests = 0} = session;
         const aiRequestLimit = process.env.AI_REQUEST_LIMIT ? parseInt(process.env.AI_REQUEST_LIMIT) : 1;
@@ -35,5 +41,10 @@ export class User {
 
     async closeDialogSession() {
         await this.sessionManager.close();
+    }
+
+    private async getAdmins():Promise<number[]> {
+        const admins = JSON.parse((await readFile('./assets/app-config.json')).toString()).ADMINS;
+        return admins.split(',').map((id: string) => parseInt(id.trim()));
     }
 }

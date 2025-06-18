@@ -1,8 +1,7 @@
-import { USER_STATES } from "../constants";
-import { Session } from "../types/session.interface";
-import { SessionStorage } from "../types/session-storage.interface";
-import { RedisSessionStorage } from "../storage/redis-session-storage";
-import { MemorySessionStorage } from "../storage/memory-session-storage";
+import {Session} from "../types/session.interface";
+import {SessionStorage} from "../types/session-storage.interface";
+import {RedisSessionStorage} from "../storage/redis-session-storage";
+import {MemorySessionStorage} from "../storage/memory-session-storage";
 
 export class SessionManager {
   private storage: SessionStorage;
@@ -57,14 +56,6 @@ export class SessionManager {
   }
 
   private createNewSession(): Session {
-    return {
-      state: USER_STATES.WAITING_INTERPRETER,
-      interpreter: undefined,
-      dreamText: undefined,
-      currentQuestion: 0,
-      answers: [],
-      createdAt: new Date().toISOString(),
-      countAIRequests: 0
-    };
+    return this.storage.createNewSession();
   }
 }
