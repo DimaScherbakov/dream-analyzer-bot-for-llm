@@ -25,15 +25,15 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                     parse_mode: 'Markdown'
                 });
 
-                if (!session.interpreter || !session.dreamText || !session.answers) {
+                if (!session.dreamText) {
                     throw new Error('Недостаточно данных для анализа');
                 }
 
                 // Подготавливаем данные для API
                 const promptData: PromptData = {
-                    interpreter: session.interpreter,
+                    interpreter: session.interpreter || 'miller',
                     dreamText: session.dreamText,
-                    answers: session.answers
+                    answers: session.answers || []
                 };
                 // Вызываем API для анализа
                 const analysisResult =await bot.getGeminiAPI().callGeminiAPI(promptData)

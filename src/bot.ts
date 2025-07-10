@@ -17,9 +17,9 @@ export default class DreamAnalyzerBot {
   private geminiAPI!: GeminiAPI;
   sceneManager!: SceneManager;
   private analyzeDreamStage = new Stage([
-      selectInterpreterSceneFactory(this),
+      // selectInterpreterSceneFactory(this),
       userDreamInputSceneFactory(this),
-      askQuestionsSceneFactory(this),
+      // askQuestionsSceneFactory(this),
       analyzeDreamSceneFactory(this)
   ]);
   user!: User;
@@ -78,9 +78,9 @@ export default class DreamAnalyzerBot {
   // Настройка обработчиков команд и событий
   setupHandlers() {
     // Команда start
-      this.bot.action('start', (ctx) => (ctx as any).scene.enter('selectInterpreterScene'));
-      this.bot.command('start', (ctx) => (ctx as any).scene.enter('selectInterpreterScene'));
-      this.bot.on('new_chat_members', (ctx) => (ctx as any).scene.enter('selectInterpreterScene'));
+      this.bot.action('start', (ctx) => (ctx as any).scene.enter('userDreamInputScene'));
+      this.bot.command('start', (ctx) => (ctx as any).scene.enter('userDreamInputScene'));
+      this.bot.on('new_chat_members', (ctx) => (ctx as any).scene.enter('userDreamInputScene'));
 
     // Обработчик неизвестных команд
     this.bot.on('message', (ctx) => this.sceneManager.initialState(ctx));

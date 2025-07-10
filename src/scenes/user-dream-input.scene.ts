@@ -36,7 +36,7 @@ export const userDreamInputSceneFactory = (bot: DreamAnalyzerBot) => {
 
                 await bot.sceneManager.replyAndStore(ctx,'✅ Описание сна получено!\n\nТеперь ответьте на несколько вопросов для более точного анализа:');
                 // Задаем первый вопрос
-                await ctx.scene.enter('askQuestionsScene');
+                await ctx.scene.enter('analyzeDreamScene');
             }
         }
     );
