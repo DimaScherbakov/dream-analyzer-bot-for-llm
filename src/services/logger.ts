@@ -1,7 +1,6 @@
 import {LOG_FOLDER} from "../constants";
 import * as fs from "node:fs";
 import path from "node:path";
-import * as os from "node:os";
 
 export class Logger {
 
@@ -32,8 +31,20 @@ export class Logger {
         if (!fs.existsSync(usersFilePath)) {
             fs.writeFileSync(usersFilePath, '', 'utf8');
         }
-        const time = new Date().toLocaleTimeString();
-        const logData = `[${time}] ${args.join(' ')}\n`;
+        const now = new Date();
+        const formatted = `${now.getFullYear()}-${(now.getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}-${now.getDate()
+            .toString()
+            .padStart(2, '0')} ${now.getHours()
+            .toString()
+            .padStart(2, '0')}:${now.getMinutes()
+            .toString()
+            .padStart(2, '0')}:${now.getSeconds()
+            .toString()
+            .padStart(2, '0')}`;
+
+        const logData = `[${formatted}] ${args.join(' ')}\n`;
 
         fs.appendFileSync(usersFilePath, logData, 'utf8');
     }

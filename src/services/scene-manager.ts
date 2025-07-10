@@ -1,6 +1,7 @@
 import {MyContext} from "../types/context.interface";
 import {Markup} from "telegraf";
 import {readFile} from "node:fs/promises";
+import * as fs from "node:fs";
 
 export default class SceneManager {
     startButton = Markup.button.callback('🚀 Старт', 'start');
@@ -54,7 +55,16 @@ export default class SceneManager {
 
     async initialState(ctx: MyContext): Promise<void> {
         this.handleInput(ctx);
-        await ctx.reply('Добро пожаловать! Нажмите «Старт».', Markup.inlineKeyboard([this.startButton]));
+        await ctx.replyWithPhoto(
+            {
+                source: fs.createReadStream('./2.jpg'),
+                filename: '2.jpg'
+            },
+            {
+                //   caption: 'Написати сон',
+                ...Markup.inlineKeyboard([this.startButton])
+            }
+        );
         await this.deleteAll(ctx);
     }
 
