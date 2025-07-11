@@ -4,7 +4,8 @@ import {readFile} from "node:fs/promises";
 import * as fs from "node:fs";
 
 export default class SceneManager {
-    startButton = Markup.button.callback('🚀 Старт', 'start');
+    // startButton = Markup.button.callback(ctx.i18n.t("startButton"), 'start');
+    startButton = Markup.button.callback('🔮 Написать сон', 'start');
     interpreterButtons = [
         [
             Markup.button.callback('📖 Сонник Миллера', 'interpreter_miller'),
@@ -57,7 +58,7 @@ export default class SceneManager {
         this.handleInput(ctx);
         await ctx.replyWithPhoto(
             {
-                source: fs.createReadStream('./2.jpg'),
+                source: fs.createReadStream('./src/services/2.jpg'),
                 filename: '2.jpg'
             },
             {
@@ -71,6 +72,9 @@ export default class SceneManager {
 
     async promoteTGChannel(ctx: MyContext): Promise<void> {
         const tgChannel = JSON.parse((await readFile('./assets/app-config.json')).toString()).TG_CHANNEL_TO_PROMOTE;
-        await this.replyAndStore(ctx,`Подпишись на наш телеграм канал и получи ответ ${tgChannel}`);
+        // const message = ctx.i18n.t("subscribeToChannel", { channel: tgChannel });
+        // await this.replyAndStore(ctx, message);
+        await this.replyAndStore(ctx, `Подпишись на наш телеграм канал и получи ответ ${tgChannel}`);
+
     }
 }

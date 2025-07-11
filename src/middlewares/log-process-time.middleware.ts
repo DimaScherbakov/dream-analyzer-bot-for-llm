@@ -14,6 +14,9 @@ const logProcessTimeMiddleware = async (ctx: TelegrafContext, next: () => Promis
 
         // Отправляем пользователю сообщение об ошибке
         try {
+            // const message = ctx.i18n.t("internalError");
+            // await ctx.reply(message);
+
             await ctx.reply('Произошла внутренняя ошибка. Попробуйте позже или начните заново с /start');
         } catch (replyError) {
             console.error('Error sending error message:', replyError);

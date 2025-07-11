@@ -24,6 +24,9 @@ export const startAnalyzeDream = async (ctx: MyContext, bot: DreamAnalyzerBot) =
         }
 
         if(!(await bot.user.hasAIPermission())) {
+            // const message = ctx.i18n.t("tryAgain");
+            // return await bot.sceneManager.replyAndStore(ctx as MyContext, message, Markup.inlineKeyboard([bot.sceneManager.startButton]));
+
             return await bot.sceneManager.replyAndStore(ctx as MyContext, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', Markup.inlineKeyboard([bot.sceneManager.startButton]));
         }
 

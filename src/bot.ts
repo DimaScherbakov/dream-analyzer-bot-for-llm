@@ -92,6 +92,8 @@ export default class DreamAnalyzerBot {
       
       // Пытаемся уведомить пользователя об ошибке
       try {
+        // const message = ctx.i18n.t("requestProcessingError");
+        // ctx.reply(message);
         ctx.reply('Произошла ошибка при обработке вашего запроса. Попробуйте начать заново с /start');
       } catch (replyError) {
         console.error('Error sending error notification:', replyError);

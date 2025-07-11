@@ -8,7 +8,11 @@ export const userDreamInputSceneFactory = (bot: DreamAnalyzerBot) => {
         'userDreamInputScene',
         async (ctx) => {
             await bot.sceneManager.deleteAll(ctx);
-            await bot.sceneManager.replyAndStore(ctx, '⚠️ Отправьте описание одного сна одним сообщением');
+            // const message = ctx.i18n.t("oneMessagePrompt");
+            // await bot.sceneManager.replyAndStore(ctx, message);
+            await bot.sceneManager.replyAndStore(ctx, '💭 **Расскажи свой сон одним сообщением.**\n\nПиши всё, что вспомнишь: события, людей, образы, цвета, эмоции.',  {
+                parse_mode: 'Markdown'
+            });
             ctx.wizard.next();
         },
         async(ctx) => {
@@ -17,12 +21,16 @@ export const userDreamInputSceneFactory = (bot: DreamAnalyzerBot) => {
             if((ctx.message as any)?.text) {
                 const messageText = TextFormatter.removeEmojis((ctx.message as any)?.text || '');
                 if (messageText.length < 10) {
-                    await bot.sceneManager.replyAndStore(ctx,'Пожалуйста, опишите ваш сон более подробно (минимум 10 символов).');
+                // const message = ctx.i18n.t("dreamTooShort");
+                // await bot.sceneManager.replyAndStore(ctx, message);
+                await bot.sceneManager.replyAndStore(ctx, 'Пожалуйста, опишите ваш сон более подробно (минимум 10 символов).');
                     return;
                 }
 
                 if (messageText.length > 2000) {
-                    await bot.sceneManager.replyAndStore(ctx,'Описание слишком длинное. Пожалуйста, сократите до 2000 символов.');
+                    // const message = ctx.i18n.t("dreamTooLong");
+                    // await bot.sceneManager.replyAndStore(ctx, message);
+                    await bot.sceneManager.replyAndStore(ctx, 'Описание слишком длинное. Пожалуйста, сократите до 2000 символов.');
                     return;
                 }
 
@@ -34,9 +42,9 @@ export const userDreamInputSceneFactory = (bot: DreamAnalyzerBot) => {
                     answers: []
                 });
 
-                await bot.sceneManager.replyAndStore(ctx,'✅ Описание сна получено!\n\nТеперь ответьте на несколько вопросов для более точного анализа:');
-                // Задаем первый вопрос
-                await ctx.scene.enter('analyzeDreamScene');
+                // await bot.sceneManager.replyAndStore(ctx,'✅ Описание сна получено!\n\nТеперь ответьте на несколько вопросов для более точного анализа:');
+                // // Задаем первый вопрос
+                // await ctx.scene.enter('analyzeDreamScene');
             }
         }
     );
