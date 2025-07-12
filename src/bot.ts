@@ -7,22 +7,30 @@ import {User} from "./user";
 import userFactory from "./middlewares/user-factory.meddleware";
 import SceneManager from "./services/scene-manager";
 import {userDreamInputSceneFactory} from "./scenes/user-dream-input.scene";
-import {askQuestionsSceneFactory} from "./scenes/ask-questions.scene";
 import {analyzeDreamSceneFactory} from "./scenes/analyze-dream.scene";
 import {SessionManager} from "./services/session-manager";
-import {selectInterpreterSceneFactory} from "./scenes/select-interpreter/select-interpreter.scene";
+import TelegrafI18n from "telegraf-i18n";
+import path from "node:path";
+import {MyContext} from "./types/context.interface";
+import { selectLanguageSceneFactory } from './scenes/select-language.scene';
 
 export default class DreamAnalyzerBot {
-  private bot!: Telegraf<Scenes.WizardContext>;
+  private bot!: Telegraf<MyContext>;
   private geminiAPI!: GeminiAPI;
   sceneManager!: SceneManager;
   private analyzeDreamStage = new Stage([
-      // selectInterpreterSceneFactory(this),
+      selectLanguageSceneFactory(this),
       userDreamInputSceneFactory(this),
-      // askQuestionsSceneFactory(this),
       analyzeDreamSceneFactory(this)
   ]);
   user!: User;
+
+    i18n = new TelegrafI18n({
+        defaultLanguage: 'ru',
+        allowMissing: false, // Default true
+        directory: path.resolve(__dirname, '..', 'src', 'locales'),
+        useSession: true,
+    })
 
     constructor() {
     this.initialize();
@@ -40,7 +48,7 @@ export default class DreamAnalyzerBot {
       this.sceneManager = new SceneManager();
 
       // Создаем бота
-      this.bot = new Telegraf(process.env.BOT_TOKEN);
+      this.bot = new Telegraf<MyContext>(process.env.BOT_TOKEN);
 
       // Настраиваем middleware
       this.setupMiddleware();
@@ -60,6 +68,7 @@ export default class DreamAnalyzerBot {
   setupMiddleware() {
     const sessionManger = new SessionManager();
     this.bot.use(session());
+    this.bot.use(this.i18n.middleware());
     // Логирование входящих сообщений
     this.bot.use(logProcessTimeMiddleware);
     this.bot.use(async (ctx, next) => {
@@ -78,12 +87,12 @@ export default class DreamAnalyzerBot {
   // Настройка обработчиков команд и событий
   setupHandlers() {
     // Команда start
-      this.bot.action('start', (ctx) => (ctx as any).scene.enter('userDreamInputScene'));
-      this.bot.command('start', (ctx) => (ctx as any).scene.enter('userDreamInputScene'));
-      this.bot.on('new_chat_members', (ctx) => (ctx as any).scene.enter('userDreamInputScene'));
+      this.bot.action('start', (ctx) => ctx.scene.enter('selectLanguageScene'));
+      this.bot.command('start', (ctx) => ctx.scene.enter('selectLanguageScene'));
+      this.bot.on('new_chat_members', (ctx) => ctx.scene.enter('selectLanguageScene'));
 
     // Обработчик неизвестных команд
-    this.bot.on('message', (ctx) => this.sceneManager.initialState(ctx));
+    this.bot.on('message', (ctx: MyContext) => this.sceneManager.initialState(ctx));
 
     // Обработка ошибок
     this.bot.catch((err: unknown, ctx) => {

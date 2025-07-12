@@ -2,6 +2,7 @@ import {MyContext} from "../types/context.interface";
 import {Markup} from "telegraf";
 import {readFile} from "node:fs/promises";
 import * as fs from "node:fs";
+import path from "node:path";
 
 export default class SceneManager {
     // startButton = Markup.button.callback(ctx.i18n.t("startButton"), 'start');
@@ -16,6 +17,12 @@ export default class SceneManager {
             // Markup.button.callback('💭 Сонник Лоффа', 'interpreter_loff'),
             // Markup.button.callback('💭 Сонник Канта', 'interpreter_kant')
             Markup.button.callback('💭 Сонник Юнга', 'interpreter_jung')
+        ],
+    ];
+    languageButtons = [
+        [
+            Markup.button.callback('Русский', 'ru'),
+            Markup.button.callback('Українська', 'uk')
         ],
     ];
 
@@ -56,9 +63,10 @@ export default class SceneManager {
 
     async initialState(ctx: MyContext): Promise<void> {
         this.handleInput(ctx);
+        const imagePath = path.resolve(__dirname, '..', '..', 'src', 'services', '2.jpg');
         await ctx.replyWithPhoto(
             {
-                source: fs.createReadStream('./src/services/2.jpg'),
+                source: fs.createReadStream(imagePath),
                 filename: '2.jpg'
             },
             {

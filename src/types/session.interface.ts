@@ -4,6 +4,7 @@ import {Scenes} from "telegraf";
 export interface SceneSession extends Scenes.WizardSession {
     allMessageIds?: number[];
     isGreeted?: boolean;
+    language?: string;
 }
 
 export interface Session {

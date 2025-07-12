@@ -8,11 +8,7 @@ export const userDreamInputSceneFactory = (bot: DreamAnalyzerBot) => {
         'userDreamInputScene',
         async (ctx) => {
             await bot.sceneManager.deleteAll(ctx);
-            // const message = ctx.i18n.t("oneMessagePrompt");
-            // await bot.sceneManager.replyAndStore(ctx, message);
-            await bot.sceneManager.replyAndStore(ctx, '💭 **Расскажи свой сон одним сообщением.**\n\nПиши всё, что вспомнишь: события, людей, образы, цвета, эмоции.',  {
-                parse_mode: 'Markdown'
-            });
+            await bot.sceneManager.replyAndStore(ctx, ctx.i18n.t("oneMessagePrompt"));
             ctx.wizard.next();
         },
         async(ctx) => {
@@ -44,7 +40,7 @@ export const userDreamInputSceneFactory = (bot: DreamAnalyzerBot) => {
 
                 // await bot.sceneManager.replyAndStore(ctx,'✅ Описание сна получено!\n\nТеперь ответьте на несколько вопросов для более точного анализа:');
                 // // Задаем первый вопрос
-                // await ctx.scene.enter('analyzeDreamScene');
+                await ctx.scene.enter('analyzeDreamScene');
             }
         }
     );
