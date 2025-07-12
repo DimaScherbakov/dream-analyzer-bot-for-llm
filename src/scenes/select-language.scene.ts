@@ -9,7 +9,7 @@ export const selectLanguageSceneFactory = (bot: DreamAnalyzerBot) => {
             try {
                 console.log('[selectLanguageSceneFactory] 1 step started');
                 await bot.sceneManager.deleteAll(ctx);
-                if(ctx.session.isLanguageSelected) {
+                if((ctx.session as any).isLanguageSelected) {
                     return ctx.scene.enter('userDreamInputScene');
                 }
                 // Создаем кнопки для языков

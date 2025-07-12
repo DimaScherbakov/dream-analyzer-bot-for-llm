@@ -2,11 +2,11 @@
   "name": "dream-analyzer-bot",
   "version": "1.0.0",
   "description": "Telegram bot for dream analysis using AI",
-  "main": "node /index.js",
+  "main": " src/index.js",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "build:watch": "tsc -w -p tsconfig.json",
-    "start": "node dist/index.js",
+    "start": "nodemon dist/index.js",
     "dev": "concurrently \"npm run build:watch\" \"npm run start\""
   },
   "dependencies": {

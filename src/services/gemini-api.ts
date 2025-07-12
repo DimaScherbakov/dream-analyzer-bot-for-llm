@@ -17,12 +17,12 @@ export default class GeminiAPI {
   }
 
   // Основная функция для вызова Gemini API
-  async callGeminiAPI(promptData: PromptData): Promise<string> {
+  async callGeminiAPI(promptData: PromptData, language: string): Promise<string> {
     try {
       const { interpreter, dreamText, answers } = promptData;
       
       // Формируем промпт для анализа сна
-      const prompt = this.buildPrompt(interpreter, dreamText, answers);
+      const prompt = this.buildPrompt(language, dreamText, answers);
 
       const config: GenerateContentConfig = {
           temperature: 0.7,
@@ -61,17 +61,21 @@ export default class GeminiAPI {
   }
 
   // Построение промпта для анализа сна
-  buildPrompt(interpreter: 'miller' | 'freud' | 'tsvetkov' | 'loff' | 'kant' | 'jung', dreamText: string, answers: string[]): string {
-    const interpreterNames: Record<typeof interpreter, string> = {
-      miller: 'Миллера',
-      freud: 'Фрейда', 
-      tsvetkov: 'Цветкова',
-      loff: 'Лоффа',
-      kant: 'Канта',
-      jung: 'Юнга'
-    };
+  buildPrompt(language: string, dreamText: string, answers: string[]): string {
+      const interpreterNames = {
+          miller: 'Миллера',
+          freud: 'Фрейда',
+          tsvetkov: 'Цветкова',
+          loff: 'Лоффа',
+          kant: 'Канта',
+          jung: 'Юнга',
+      };
 
-    const interpreterName = interpreterNames[interpreter] || 'неизвестного';
+      const keys = Object.keys(interpreterNames) as (keyof typeof interpreterNames)[];
+      const randomKey = keys[Math.floor(Math.random() * keys.length)];
+
+      const interpreterName = interpreterNames[randomKey];
+      console.log(`[gemini] selected interpreter: ${randomKey}`);
     // const promptTemplate = ctx.i18n.t("dreamPrompt", { dream: dreamText });
     // let prompt = promptTemplate;
     let prompt = `Ты - эксперт по толкованию снов в стиле сонника Миллера, Фрейда, Цветкова, Лоффа.
@@ -110,6 +114,7 @@ export default class GeminiAPI {
     6. Ответ должен быть максимально полезным, цеплять и побуждать снова образаться к тебе со следующим сном
     7. Как опытный маркетолог ты должен продать свой ответ
     8. Длина ответа не должна превышать 3500 символов
+    9. Ответ должен быть на ${language} языке.
     `;
 
     return prompt;

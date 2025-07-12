@@ -5,6 +5,7 @@ export interface SceneSession extends Scenes.WizardSession {
     allMessageIds?: number[];
     isGreeted?: boolean;
     language?: string;
+    isLanguageSelected?: boolean;
 }
 
 export interface Session {

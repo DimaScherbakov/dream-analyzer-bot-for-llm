@@ -39,7 +39,7 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                     answers: session.answers || []
                 };
                 // Вызываем API для анализа
-                const analysisResult =await bot.getGeminiAPI().callGeminiAPI(promptData)
+                const analysisResult =await bot.getGeminiAPI().callGeminiAPI(promptData, ctx.i18n.locale())
                     .then(text => {
                         Logger.log(`[gemini] original ${text}`);
                         return text;
