@@ -1,6 +1,11 @@
 import {Scenes} from "telegraf";
 import DreamAnalyzerBot from "../bot";
 import {Markup} from "telegraf";
+import {LANG} from "../constants";
+
+function isKnownLanguage(languageCode: string): boolean {
+    return Object.keys(LANG).includes(languageCode.toUpperCase());
+}
 
 export const selectLanguageSceneFactory = (bot: DreamAnalyzerBot) => {
     return new Scenes.WizardScene<Scenes.WizardContext>(
@@ -9,6 +14,11 @@ export const selectLanguageSceneFactory = (bot: DreamAnalyzerBot) => {
             try {
                 console.log('[selectLanguageSceneFactory] 1 step started');
                 await bot.sceneManager.deleteAll(ctx);
+                if(ctx.from?.language_code && isKnownLanguage(ctx.from?.language_code)) {
+                    // Если язык уже выбран, просто устанавливаем его
+                    ctx.i18n.locale(ctx.from?.language_code);
+                    ctx.session.isLanguageSelected = true;
+                }
                 if((ctx.session as any).isLanguageSelected) {
                     return ctx.scene.enter('userDreamInputScene');
                 }

@@ -95,3 +95,8 @@ const userDataPath = () => {
 }
 
 export const LOG_FOLDER = userDataPath() +'/logs'; // Папка для логов
+
+export enum LANG {
+    UK = 'uk',
+    RU = 'ru',
+}

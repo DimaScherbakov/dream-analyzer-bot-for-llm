@@ -13,6 +13,7 @@ import TelegrafI18n from "telegraf-i18n";
 import path from "node:path";
 import {MyContext} from "./types/context.interface";
 import { selectLanguageSceneFactory } from './scenes/select-language.scene';
+import {LANG} from "./constants";
 
 export default class DreamAnalyzerBot {
   private bot!: Telegraf<MyContext>;
@@ -26,7 +27,7 @@ export default class DreamAnalyzerBot {
   user!: User;
 
     i18n = new TelegrafI18n({
-        defaultLanguage: 'ru',
+        defaultLanguage: LANG.RU, // Default language
         allowMissing: false, // Default true
         directory: path.resolve(__dirname, '..', 'src', 'locales'),
         useSession: true,
