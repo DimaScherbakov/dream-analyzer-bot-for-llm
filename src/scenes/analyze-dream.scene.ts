@@ -21,11 +21,11 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                 await bot.sceneManager.promoteTGChannel(ctx);
                 await new Promise(resolve => setTimeout(resolve, 15000)); // Задержка для лучшего UX
                 await bot.sceneManager.deleteAll(ctx);
-                // const message = ctx.i18n.t("analyzing");
-                // await bot.sceneManager.replyAndStore(ctx, message, { parse_mode: 'Markdown' });
-                await bot.sceneManager.replyAndStore(ctx,'🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
-                    parse_mode: 'Markdown'
-                });
+                const message = ctx.i18n.t("analyzing");
+                await bot.sceneManager.replyAndStore(ctx, message, { parse_mode: 'Markdown' });
+                // await bot.sceneManager.replyAndStore(ctx,'🔮 **Анализирую ваш сон...**\n\nЭто может занять несколько секунд.', {
+                //     parse_mode: 'Markdown'
+                // });
 
 
                 if (!session.dreamText) {
@@ -49,7 +49,7 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                 await bot.sceneManager.deleteAll(ctx);
                 // Отправляем результат пользователю
                 // TODO Убрать это сообщение
-                await ctx.replyWithMarkdownV2(`✨ **Анализ сна завершен:**\n\n${analysisResult}`);
+                // await ctx.replyWithMarkdownV2(`✨ **Анализ сна завершен:**\n\n${analysisResult}`);
                 Logger.log(`User ${bot.user.id} received analysis: ${analysisResult}`);
 
                 // Обновляем состояние
@@ -59,10 +59,10 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                 });
                 await bot.sceneManager.deleteAll(ctx);
                 if(!(await bot.user.hasAIPermission())) {
-                    // const message = ctx.i18n.t('tryAgain');
-                    // await bot.sceneManager.replyAndStore(ctx, message, Markup.inlineKeyboard([bot.sceneManager.startButton]));
+                    const message = ctx.i18n.t('tryAgain');
+                    await bot.sceneManager.replyAndStore(ctx, message, Markup.inlineKeyboard([bot.sceneManager.startButton]));
 
-                    await bot.sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', Markup.inlineKeyboard([bot.sceneManager.startButton]));
+                    // await bot.sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', Markup.inlineKeyboard([bot.sceneManager.startButton]));
                 } else {
                     await bot.sceneManager.initialState(ctx);
                 }
@@ -75,9 +75,9 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                 console.error('Error in startDreamAnalysis:', error);
                 // const errorMessage = error instanceof Error ? error.message : ctx.i18n.t("unknownError");
                 const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-                // const message = ctx.i18n.t("dreamAnalysisError", { error: errorMessage });
-                // await bot.sceneManager.replyAndStore(ctx, message);
-                await bot.sceneManager.replyAndStore(ctx,`😔 Произошла ошибка при анализе сна: ${errorMessage}\n\nПопробуйте еще раз позже или нажмите /start для нового анализа.`);
+                const message = ctx.i18n.t("dreamAnalysisError", { error: errorMessage });
+                await bot.sceneManager.replyAndStore(ctx, message);
+                // await bot.sceneManager.replyAndStore(ctx,`😔 Произошла ошибка при анализе сна: ${errorMessage}\n\nПопробуйте еще раз позже или нажмите /start для нового анализа.`);
 
                 // Сбрасываем состояние при ошибке
                 await bot.user.updateDialogSession({

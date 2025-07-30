@@ -19,18 +19,18 @@ export const selectInterpreterInput =  async (ctx: MyContext, bot: DreamAnalyzer
         const interpreterKey = callbackData?.replace('interpreter_', '');
 
         if (!interpreterKey || !DREAM_INTERPRETERS[interpreterKey]) {
-            // const message = ctx.i18n.t("unknownInterpreter");
-            // await ctx.answerCbQuery(message);
-            await ctx.answerCbQuery('Неизвестный сонник');
+            const message = ctx.i18n.t("unknownInterpreter");
+            await ctx.answerCbQuery(message);
+            // await ctx.answerCbQuery('Неизвестный сонник');
 
             return;
         }
 
         // Проверяем, не выбран ли уже этот сонник
         if (session.interpreter === interpreterKey) {
-            // const message = ctx.i18n.t("interpreterAlreadySelected");
-            // await ctx.answerCbQuery(message);
-            await ctx.answerCbQuery('Этот сонник уже выбран');
+            const message = ctx.i18n.t("interpreterAlreadySelected");
+            await ctx.answerCbQuery(message);
+            // await ctx.answerCbQuery('Этот сонник уже выбран');
             return;
         }
 
@@ -57,18 +57,18 @@ export const selectInterpreterInput =  async (ctx: MyContext, bot: DreamAnalyzer
     } catch (error) {
         console.error('Error in handleInterpreterChoice:', error);
         await ctx.answerCbQuery('Произошла ошибка');
-        // const message = ctx.i18n.t("interpreterChoiceError");
-        // await bot.sceneManager.replyAndStore(ctx, message, Markup.inlineKeyboard([bot.sceneManager.startButton]));
-        await bot.sceneManager.replyAndStore(ctx,'Произошла ошибка при выборе сонника. Попробуйте начать заново /start');
+        const messageInterpreterChoiceError = ctx.i18n.t("interpreterChoiceError");
+        await bot.sceneManager.replyAndStore(ctx, messageInterpreterChoiceError, Markup.inlineKeyboard([bot.sceneManager.startButton]));
+        // await bot.sceneManager.replyAndStore(ctx,'Произошла ошибка при выборе сонника. Попробуйте начать заново /start');
     }
 }
 
 const handleInterpreterConfirm = async (ctx: MyContext, bot: DreamAnalyzerBot) => {
     const session = await bot.user.getDialogSession();
     if (!session.interpreter) {
-        // const message = ctx.i18n.t("interpreterNotSelected");
-        // await ctx.answerCbQuery(message);
-        await ctx.answerCbQuery('Сначала выберите сонник');
+        const message = ctx.i18n.t("interpreterNotSelected");
+        await ctx.answerCbQuery(message);
+        // await ctx.answerCbQuery('Сначала выберите сонник');
         return;
     }
 
