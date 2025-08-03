@@ -58,7 +58,7 @@ export const selectInterpreterInput =  async (ctx: MyContext, bot: DreamAnalyzer
         console.error('Error in handleInterpreterChoice:', error);
         await ctx.answerCbQuery('Произошла ошибка');
         const messageInterpreterChoiceError = ctx.i18n.t("interpreterChoiceError");
-        await bot.sceneManager.replyAndStore(ctx, messageInterpreterChoiceError, Markup.inlineKeyboard([bot.sceneManager.startButton]));
+        await bot.sceneManager.replyAndStore(ctx, messageInterpreterChoiceError, Markup.inlineKeyboard([bot.sceneManager.startButton(ctx)]));
         // await bot.sceneManager.replyAndStore(ctx,'Произошла ошибка при выборе сонника. Попробуйте начать заново /start');
     }
 }

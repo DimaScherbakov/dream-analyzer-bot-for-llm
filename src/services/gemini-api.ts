@@ -2,6 +2,7 @@ import {PromptData} from "../types/prompt-data.interface";
 import {GenerateContentConfig, GoogleGenAI} from "@google/genai";
 import {Logger} from "./logger";
 import {TextFormatter} from "./text-formatter";
+import I18n from "telegraf-i18n";
 
 
 export default class GeminiAPI {
@@ -17,12 +18,12 @@ export default class GeminiAPI {
   }
 
   // Основная функция для вызова Gemini API
-  async callGeminiAPI(promptData: PromptData, language: string): Promise<string> {
+  async callGeminiAPI(promptData: PromptData, i18n: I18n): Promise<string> {
     try {
       const { interpreter, dreamText, answers } = promptData;
       
       // Формируем промпт для анализа сна
-      const prompt = this.buildPrompt(language, dreamText, answers);
+      const prompt = this.buildPrompt(i18n, dreamText, answers);
 
       const config: GenerateContentConfig = {
           temperature: 0.7,
@@ -61,7 +62,7 @@ export default class GeminiAPI {
   }
 
   // Построение промпта для анализа сна
-  buildPrompt(language: string, dreamText: string, answers: string[]): string {
+  buildPrompt(i18n: I18n, dreamText: string, answers: string[]): string {
       const interpreterNames = {
           miller: 'Миллера',
           freud: 'Фрейда',
@@ -76,7 +77,7 @@ export default class GeminiAPI {
 
       const interpreterName = interpreterNames[randomKey];
       console.log(`[gemini] selected interpreter: ${randomKey}`);
-    const promptTemplate = ctx.i18n.t("dreamPrompt", { dream: dreamText });
+    const promptTemplate = i18n.t("dreamPrompt", { dream: dreamText });
     let prompt = promptTemplate;
     // let prompt = `Ты - эксперт по толкованию снов в стиле сонника Миллера, Фрейда, Цветкова, Лоффа.
 
@@ -103,7 +104,7 @@ export default class GeminiAPI {
     });
 
 
-    const requirements = ctx.i18n.t("dreamRequirements");
+    const requirements = i18n.t("dreamRequirements");
     prompt += requirements;
     // prompt += `\n\n**Требования к толкованию:**
     // 1. Используй методологию и стиль выбраного тобой сонника

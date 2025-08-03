@@ -39,7 +39,7 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                     answers: session.answers || []
                 };
                 // Вызываем API для анализа
-                const analysisResult =await bot.getGeminiAPI().callGeminiAPI(promptData, ctx.i18n.locale())
+                const analysisResult =await bot.getGeminiAPI().callGeminiAPI(promptData, ctx.i18n)
                     .then(text => {
                         Logger.log(`[gemini] original ${text}`);
                         return text;
@@ -60,7 +60,7 @@ export const analyzeDreamSceneFactory = (bot: DreamAnalyzerBot) => {
                 await bot.sceneManager.deleteAll(ctx);
                 if(!(await bot.user.hasAIPermission())) {
                     const message = ctx.i18n.t('tryAgain');
-                    await bot.sceneManager.replyAndStore(ctx, message, Markup.inlineKeyboard([bot.sceneManager.startButton]));
+                    await bot.sceneManager.replyAndStore(ctx, message, Markup.inlineKeyboard([bot.sceneManager.startButton(ctx)]));
 
                     // await bot.sceneManager.replyAndStore(ctx, 'Попробуйте через 24 часа, лимит запросов на сегодня исчерпан.', Markup.inlineKeyboard([bot.sceneManager.startButton]));
                 } else {

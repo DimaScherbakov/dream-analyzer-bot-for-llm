@@ -5,7 +5,9 @@ import * as fs from "node:fs";
 import path from "node:path";
 
 export default class SceneManager {
-    startButton = Markup.button.callback(ctx.i18n.t("startButton"), 'start');
+    startButton = (ctx: any) => {
+        return Markup.button.callback(ctx.i18n.t("startButton"), 'start');
+    };
     // startButton = Markup.button.callback('🔮 Написать сон', 'start');
     interpreterButtons = [
         [
@@ -71,7 +73,7 @@ export default class SceneManager {
             },
             {
                 //   caption: 'Написати сон',
-                ...Markup.inlineKeyboard([this.startButton])
+                ...Markup.inlineKeyboard([this.startButton(ctx)])
             }
         );
         await this.deleteAll(ctx);
