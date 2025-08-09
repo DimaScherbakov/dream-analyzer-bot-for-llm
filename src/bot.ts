@@ -1,10 +1,13 @@
 import { Bot, Context, session, InlineKeyboard } from 'grammy';
 import type { SessionFlavor } from 'grammy';
-// We do not use the i18n package from telegraf. Instead, a simple translation
-// dictionary is defined below. If you wish to expand translations, add more
-// keys here.
 import GeminiAPI from './services/gemini-api';
 import { LANG } from './constants';
+
+// Import locale dictionaries. These JSON files mirror the contents of the
+// original Telegraf bot's i18n locale files. TypeScript's resolveJsonModule
+// option in tsconfig.json allows importing JSON files directly.
+import ru from './locales/ru.json';
+import uk from './locales/uk.json';
 
 // Define the per-user session shape. The bot has a simple state machine:
 //  - idle: the user is not in any conversation
@@ -17,43 +20,25 @@ export interface DreamSession {
 // Augment the grammy context with our session state.
 export type BotContext = Context & SessionFlavor<DreamSession>;
 
-// Minimal translation table. If a translation for a key or language is missing
-// the English fallback is used.
-const TRANSLATIONS: Record<string, Record<LANG, string>> = {
-  welcome: {
-    [LANG.RU]: 'Привет! Пожалуйста, выберите язык.',
-    [LANG.UK]: 'Вітаємо! Будь ласка, виберіть мову.',
-  },
-  chooseLang: {
-    [LANG.RU]: 'Выберите язык для продолжения.',
-    [LANG.UK]: 'Виберіть мову для продовження.',
-  },
-  promptDream: {
-    [LANG.RU]: 'Опишите ваш сон одним сообщением.',
-    [LANG.UK]: 'Опишіть свій сон одним повідомленням.',
-  },
-  dreamTooShort: {
-    [LANG.RU]: 'Описание сна слишком короткое (минимум 10 символов).',
-    [LANG.UK]: 'Опис сну занадто короткий (мінімум 10 символів).',
-  },
-  dreamTooLong: {
-    [LANG.RU]: 'Описание сна слишком длинное (максимум 2000 символов).',
-    [LANG.UK]: 'Опис сну занадто довгий (максимум 2000 символів).',
-  },
-  error: {
-    [LANG.RU]: 'Произошла ошибка при анализе сна. Попробуйте ещё раз позже.',
-    [LANG.UK]: 'Сталася помилка при аналізі сну. Спробуйте ще раз пізніше.',
-  },
+// Translation dictionaries keyed by language. These objects contain all
+// strings from the original `ru.json` and `uk.json` locale files. If a
+// translation is missing for a key, a fallback is provided.
+const translations: Record<LANG, Record<string, string>> = {
+  [LANG.RU]: ru as Record<string, string>,
+  [LANG.UK]: uk as Record<string, string>,
 };
 
 /**
  * Helper function to fetch a translation. If the key or language is missing
- * the English string is returned as a fallback.
+ * a sensible fallback is returned (the key itself).
  */
 function t(key: string, lang: LANG): string {
-  const dict = TRANSLATIONS[key];
-  if (!dict) return key;
-  return dict[lang] ?? dict[LANG.RU] ?? key;
+  const langDict = translations[lang] ?? {};
+  const val = langDict[key];
+  if (typeof val === 'string') return val;
+  // Fallback to Russian if available
+  const ruVal = translations[LANG.RU][key];
+  return ruVal ?? key;
 }
 
 export default class DreamAnalyzerBot {
@@ -92,7 +77,11 @@ export default class DreamAnalyzerBot {
       const keyboard = new InlineKeyboard()
         .text('Русский', 'lang_ru')
         .text('Українська', 'lang_uk');
-      await ctx.reply(t('welcome', ctx.session.language), {
+      // Use the `selectLanguage` key from the translations as the prompt for
+      // choosing a language. If it is missing, fall back to a simple phrase.
+      const prompt = t('selectLanguage', ctx.session.language) ||
+        (ctx.session.language === LANG.RU ? 'Выберите язык' : 'Виберіть мову');
+      await ctx.reply(prompt, {
         reply_markup: keyboard,
       });
     });
@@ -105,7 +94,8 @@ export default class DreamAnalyzerBot {
       }
       ctx.session.stage = 'await_dream';
       await ctx.answerCallbackQuery();
-      await ctx.reply(t('promptDream', ctx.session.language));
+      // Use the oneMessagePrompt key for asking the user to describe their dream.
+      await ctx.reply(t('oneMessagePrompt', ctx.session.language));
     });
 
     // Handle incoming text messages. Only process them when we are
@@ -132,12 +122,12 @@ export default class DreamAnalyzerBot {
         // Call the Gemini API
         const result = await this.gemini.callGeminiAPI(promptData, {
           // Provide a minimal i18n-like interface with a t() function for GeminiAPI
-          t: (key: string) => t(key, ctx.session.language),
+          t: (key: string, opts?: any) => t(key, ctx.session.language),
         } as any);
         await ctx.reply(result, { parse_mode: 'Markdown' });
       } catch (err) {
         console.error('Gemini API error:', err);
-        await ctx.reply(t('error', ctx.session.language));
+        await ctx.reply(t('dreamAnalysisError', ctx.session.language));
       }
       // Reset the state after processing the dream
       ctx.session.stage = 'idle';
